@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Raiqub.Mcp.NuScope.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NuScope.Server\NuScope.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\src\NuScope.Server\NuScope.Server.csproj" Link="ContractFiles\NuScope.Server.csproj" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\NuScope.Server\Program.cs" Link="ContractFiles\Program.cs" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
