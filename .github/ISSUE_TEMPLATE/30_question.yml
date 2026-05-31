@@ -1,0 +1,27 @@
+name: 🤔 Question
+description: Ask a usage or development question about NuScope
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the README first in case the answer is already documented.
+  - type: textarea
+    attributes:
+      label: What are you trying to do?
+      description: Describe the goal or scenario.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What have you tried?
+      description: Include commands, code, or other attempts that show current behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any extra detail that would help answer the question.
+    validations:
+      required: false
