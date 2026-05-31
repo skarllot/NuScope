@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using Xunit;
 
 namespace Raiqub.Mcp.NuScope.Tests;
@@ -7,12 +8,17 @@ public sealed class SkeletonTests
     [Fact]
     public void Server_project_is_configured_as_nuscope_mcp_tool()
     {
-        var project = ReadContractFile("NuScope.Server.csproj");
+        var project = XDocument.Parse(ReadContractFile("NuScope.Server.csproj"));
+        var propertyGroup = Assert.Single(project.Root!.Elements("PropertyGroup"));
+        var packageReference = Assert.Single(
+            project.Root.Elements("ItemGroup")
+                .Elements("PackageReference"),
+            reference => (string?)reference.Attribute("Include") == "ModelContextProtocol");
 
-        Assert.Contains("<RootNamespace>Raiqub.Mcp.NuScope</RootNamespace>", project);
-        Assert.Contains("<PackAsTool>true</PackAsTool>", project);
-        Assert.Contains("<ToolCommandName>nuscope</ToolCommandName>", project);
-        Assert.Contains("""<PackageReference Include="ModelContextProtocol" />""", project);
+        Assert.Equal("Raiqub.Mcp.NuScope", propertyGroup.Element("RootNamespace")?.Value);
+        Assert.Equal("true", propertyGroup.Element("PackAsTool")?.Value);
+        Assert.Equal("nuscope", propertyGroup.Element("ToolCommandName")?.Value);
+        Assert.Equal("ModelContextProtocol", (string?)packageReference.Attribute("Include"));
     }
 
     [Fact]
