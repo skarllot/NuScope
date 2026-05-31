@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 
+# Local OMX orchestration workspace
+.omx/
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
