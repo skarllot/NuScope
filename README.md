@@ -4,9 +4,11 @@ MCP server for exploring NuGet packages, metadata, and source code.
 ## Development
 
 ```powershell
+dotnet tool restore
 dotnet restore --locked-mode
-dotnet build --no-restore
-dotnet test --no-build --no-restore
+dotnet csharpier check .
+dotnet build --configuration Release --no-restore
+dotnet test --configuration Release --no-build --no-restore
 ```
 
 Run the skeleton MCP server over stdio:

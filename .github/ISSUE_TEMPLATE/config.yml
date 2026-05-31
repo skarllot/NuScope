@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/skarllot/NuScope#readme
+    about: Read the project documentation before opening a request.
+  - name: ⭐ Sponsor NuScope
+    url: https://github.com/sponsors/skarllot
+    about: Help support continued maintenance.

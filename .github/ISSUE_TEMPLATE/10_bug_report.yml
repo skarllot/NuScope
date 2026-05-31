@@ -1,0 +1,51 @@
+name: 🐞 Bug report
+description: Report a problem in NuScope
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check for an existing issue before submitting a new bug report.
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what is wrong.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Include the smallest possible reproduction, command, or package example.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: NuScope version
+      description: Which version are you using?
+    validations:
+      required: false
+  - type: input
+    attributes:
+      label: .NET SDK version
+      description: Run `dotnet --version` to capture your SDK version.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Logs, screenshots, package IDs, or any other helpful context.
+    validations:
+      required: false
