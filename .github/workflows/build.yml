@@ -38,8 +38,11 @@ jobs:
             ci.dot.net:443
             dc.services.visualstudio.com:443
             github.com:443
+            globalcdn.nuget.org:443
+            nuget.org:443
             s.symcb.com:80
             s.symcd.com:80
+            www.nuget.org:443
             www.microsoft.com:80
 
       - name: Checkout
