@@ -75,6 +75,8 @@ public sealed record NuGetPackageMetadata
 
     public string? License { get; init; }
 
+    public NuGetRepositoryMetadata? Repository { get; init; }
+
     public bool RequireLicenseAcceptance { get; init; }
 
     public string? Copyright { get; init; }
@@ -100,4 +102,15 @@ public sealed record NuGetDependency
     public string? Version { get; init; }
 
     public string? Exclude { get; init; }
+}
+
+public sealed record NuGetRepositoryMetadata
+{
+    public string? Type { get; init; }
+
+    public string? Url { get; init; }
+
+    public string? Branch { get; init; }
+
+    public string? Commit { get; init; }
 }

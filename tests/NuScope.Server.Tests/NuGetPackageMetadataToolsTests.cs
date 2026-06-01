@@ -27,6 +27,7 @@ public sealed class NuGetPackageMetadataToolsTests
                         <authors>James Newton-King</authors>
                         <description>JSON framework for .NET</description>
                         <license type="expression">MIT</license>
+                        <repository type="git" url="https://github.com/JamesNK/Newtonsoft.Json" branch="master" commit="0123456789abcdef" />
                         <tags>json serialization parsing</tags>
                         <dependencies>
                           <group targetFramework="net8.0">
@@ -45,9 +46,10 @@ public sealed class NuGetPackageMetadataToolsTests
 
         var result = new NuGetPackageMetadataTools(
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
-        ).GetNuGetPackageMetadata("Newtonsoft.Json", "13.0.3");
+        ).GetNuGetPackageMetadata("Newtonsoft.Json");
 
         Assert.True(result.IsFound);
+        Assert.Equal("13.0.3", result.Version);
         Assert.Equal(packageDirectory, result.PackageDirectory);
         Assert.Equal(nuspecPath, result.NuspecPath);
 
@@ -59,6 +61,11 @@ public sealed class NuGetPackageMetadataToolsTests
         Assert.Equal("JSON framework for .NET", metadata.Description);
         Assert.Equal("expression", metadata.LicenseType);
         Assert.Equal("MIT", metadata.License);
+        Assert.NotNull(metadata.Repository);
+        Assert.Equal("git", metadata.Repository!.Type);
+        Assert.Equal("https://github.com/JamesNK/Newtonsoft.Json", metadata.Repository.Url);
+        Assert.Equal("master", metadata.Repository.Branch);
+        Assert.Equal("0123456789abcdef", metadata.Repository.Commit);
         Assert.Equal(["json", "serialization", "parsing"], metadata.Tags);
 
         var dependencyGroup = Assert.Single(metadata.DependencyGroups);

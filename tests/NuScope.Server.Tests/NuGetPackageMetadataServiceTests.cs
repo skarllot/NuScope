@@ -72,6 +72,51 @@ public sealed class NuGetPackageMetadataServiceTests
     }
 
     [Fact]
+    public void GetNuGetPackageMetadataUsesLatestFoundVersionWhenVersionIsNotProvided()
+    {
+        var oldPackageDirectory = GetPackageDirectory("Package.With.Metadata", "1.0.0");
+        var prereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta");
+        var latestPackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
+        var nuspecPath = Path.Combine(latestPackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(oldPackageDirectory);
+        fileSystem.AddDirectory(prereleasePackageDirectory);
+        fileSystem.AddDirectory(latestPackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0", result.Version);
+        Assert.Equal(latestPackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+        Assert.True(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenVersionIsNotProvidedAndPackageIsMissing()
+    {
+        var fileSystem = new MockFileSystem();
+        var parser = new RecordingNuGetPackageMetadataParser();
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata("Missing.Package");
+
+        Assert.False(result.IsFound);
+        Assert.Equal(string.Empty, result.Version);
+        Assert.Null(result.PackageDirectory);
+        Assert.Null(result.NuspecPath);
+        Assert.Null(result.Metadata);
+        Assert.Contains("was not found", result.Message);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
     public void GetNuGetPackageMetadataReturnsNotFoundWhenMultipleNuspecFilesExist()
     {
         var packageDirectory = GetPackageDirectory("Package.With.Multiple.Nuspec", "1.0.0");
