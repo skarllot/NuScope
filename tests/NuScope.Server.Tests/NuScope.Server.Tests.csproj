@@ -2,29 +2,25 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Raiqub.Mcp.NuScope.Tests</RootNamespace>
+    <RootNamespace>Raiqub.NuSpec.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions.TestingHelpers" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuScope.Server\NuScope.Server.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None
-      Include="..\..\src\NuScope.Server\NuScope.Server.csproj"
-      Link="ContractFiles\NuScope.Server.csproj"
-      CopyToOutputDirectory="PreserveNewest"
-    />
-    <None
-      Include="..\..\src\NuScope.Server\Program.cs"
-      Link="ContractFiles\Program.cs"
-      CopyToOutputDirectory="PreserveNewest"
-    />
   </ItemGroup>
 </Project>
