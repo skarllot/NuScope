@@ -38,6 +38,51 @@ public sealed class NuGetPackageMetadataParserTests
     }
 
     [Fact]
+    public void ParseReturnsNullWhenRepositoryElementIsMissing()
+    {
+        using var stream = CreateStream(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package>
+              <metadata>
+                <id>Package</id>
+              </metadata>
+            </package>
+            """
+        );
+
+        var metadata = new NuGetPackageMetadataParser().Parse(stream);
+
+        Assert.NotNull(metadata);
+        Assert.Null(metadata!.Repository);
+    }
+
+    [Fact]
+    public void ParseReturnsPartialRepositoryMetadataWhenSomeAttributesAreMissing()
+    {
+        using var stream = CreateStream(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package>
+              <metadata>
+                <id>Package</id>
+                <repository url="https://github.com/example/repo" />
+              </metadata>
+            </package>
+            """
+        );
+
+        var metadata = new NuGetPackageMetadataParser().Parse(stream);
+
+        Assert.NotNull(metadata);
+        Assert.NotNull(metadata!.Repository);
+        Assert.Null(metadata.Repository!.Type);
+        Assert.Equal("https://github.com/example/repo", metadata.Repository.Url);
+        Assert.Null(metadata.Repository.Branch);
+        Assert.Null(metadata.Repository.Commit);
+    }
+
+    [Fact]
     public void ParseReturnsNullWhenMetadataElementIsMissing()
     {
         using var stream = CreateStream(

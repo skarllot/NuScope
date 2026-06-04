@@ -126,6 +126,128 @@ public sealed class NuGetPackageMetadataServiceTests
     }
 
     [Fact]
+    public void GetNuGetPackageMetadataIgnoresInvalidVersionDirectoriesWhenSelectingLatest()
+    {
+        var invalidVersionDirectory = GetPackageDirectory("Package.With.Metadata", "not-a-version");
+        var prereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta");
+        var latestPackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
+        var nuspecPath = Path.Combine(latestPackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(invalidVersionDirectory);
+        fileSystem.AddDirectory(prereleasePackageDirectory);
+        fileSystem.AddDirectory(latestPackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0", result.Version);
+        Assert.Equal(latestPackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataUsesStableVersionOverSamePrereleaseWhenSelectingLatest()
+    {
+        var prereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta.1");
+        var stablePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
+        var nuspecPath = Path.Combine(stablePackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(prereleasePackageDirectory);
+        fileSystem.AddDirectory(stablePackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0", result.Version);
+        Assert.Equal(stablePackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataUsesLatestPrereleaseIdentifierWithMoreSegmentsWhenSelectingLatest()
+    {
+        var longerPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta.1");
+        var shorterPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta");
+        var nuspecPath = Path.Combine(longerPrereleasePackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0-beta.1" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(longerPrereleasePackageDirectory);
+        fileSystem.AddDirectory(shorterPrereleasePackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0-beta.1", result.Version);
+        Assert.Equal(longerPrereleasePackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataUsesNumericPrereleaseOrderingWithMixedIdentifiersWhenSelectingLatest()
+    {
+        var numericPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-alpha.10");
+        var alphabeticPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-alpha.beta");
+        var nuspecPath = Path.Combine(alphabeticPrereleasePackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0-alpha.beta" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(numericPrereleasePackageDirectory);
+        fileSystem.AddDirectory(alphabeticPrereleasePackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0-alpha.beta", result.Version);
+        Assert.Equal(alphabeticPrereleasePackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenRequestedVersionDirectoryIsMissing()
+    {
+        var fileSystem = new MockFileSystem();
+        var parser = new RecordingNuGetPackageMetadataParser();
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata",
+            "1.0.0"
+        );
+
+        Assert.False(result.IsFound);
+        Assert.Equal("1.0.0", result.Version);
+        Assert.Null(result.PackageDirectory);
+        Assert.Null(result.NuspecPath);
+        Assert.Null(result.Metadata);
+        Assert.Contains("version '1.0.0' was not found", result.Message);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
     public void GetNuGetPackageMetadataReturnsNotFoundWhenVersionIsNotProvidedAndPackageIsMissing()
     {
         var fileSystem = new MockFileSystem();
