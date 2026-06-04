@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <SolutionDir Condition="'$(SolutionDir)' == ''">$(MSBuildThisFileDirectory)</SolutionDir>
+    <PackageOutputPath>$(SolutionDir)artifacts</PackageOutputPath>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -11,6 +13,18 @@
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>MCP server for exploring NuGet packages, metadata, and source code</Description>
+    <Authors>Fabricio Godoy</Authors>
+    <Copyright>Copyright © Fabricio Godoy</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <NeutralLanguage>en</NeutralLanguage>
+    <RepositoryUrl>https://github.com/skarllot/NuScope</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/skarllot/NuScope</PackageProjectUrl>
+    <PackageTags>mcp;server;nuget;package;metadata;source;code;ai;tool;dnx</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
