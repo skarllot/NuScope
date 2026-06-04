@@ -1,0 +1,53 @@
+name: Create tag
+
+on:
+  workflow_dispatch:
+
+env:
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: false
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+permissions:
+  contents: read
+
+jobs:
+  create-tag:
+    if: github.actor == 'skarllot'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          disable-sudo-and-containers: true
+          egress-policy: block
+          allowed-endpoints: >
+            *.azureedge.net:443
+            aka.ms:443
+            api.nuget.org:443
+            builds.dotnet.microsoft.com:443
+            ci.dot.net:443
+            github.com:443
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2 # v5.3.0
+        with:
+          global-json-file: global.json
+
+      - name: Setup Nerdbank.GitVersioning
+        run: dotnet tool restore
+
+      - name: Tag release
+        run: dotnet nbgv tag
+
+      - name: Push Git tags
+        run: git push --tags
