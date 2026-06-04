@@ -59,7 +59,7 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
             return NuGetPackageMetadataResult.NotFound(
                 packageName,
                 resolvedVersion,
-                $"Package '{packageName}' version '{resolvedVersion}' has an invalid .nuspec file with no metadata element."
+                $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
             );
         }
 

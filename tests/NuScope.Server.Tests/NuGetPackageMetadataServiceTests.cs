@@ -180,7 +180,27 @@ public sealed class NuGetPackageMetadataServiceTests
 
         Assert.False(result.IsFound);
         Assert.Null(result.Metadata);
-        Assert.Contains("invalid .nuspec file", result.Message);
+        Assert.Contains("invalid or malformed .nuspec file", result.Message);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenNuspecHasNoMetadataElement()
+    {
+        var packageDirectory = GetPackageDirectory("Package.Without.Metadata.Element", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.without.metadata.element.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><content /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new NuGetPackageMetadataParser()
+        ).GetNuGetPackageMetadata("Package.Without.Metadata.Element", "1.0.0");
+
+        Assert.False(result.IsFound);
+        Assert.Null(result.Metadata);
+        Assert.Contains("invalid or malformed .nuspec file", result.Message);
     }
 
     private static string GetPackageDirectory(string packageName, string version)
