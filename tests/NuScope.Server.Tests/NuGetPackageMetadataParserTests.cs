@@ -38,6 +38,51 @@ public sealed class NuGetPackageMetadataParserTests
     }
 
     [Fact]
+    public void ParseReturnsNullWhenRepositoryElementIsMissing()
+    {
+        using var stream = CreateStream(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package>
+              <metadata>
+                <id>Package</id>
+              </metadata>
+            </package>
+            """
+        );
+
+        var metadata = new NuGetPackageMetadataParser().Parse(stream);
+
+        Assert.NotNull(metadata);
+        Assert.Null(metadata!.Repository);
+    }
+
+    [Fact]
+    public void ParseReturnsPartialRepositoryMetadataWhenSomeAttributesAreMissing()
+    {
+        using var stream = CreateStream(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package>
+              <metadata>
+                <id>Package</id>
+                <repository url="https://github.com/example/repo" />
+              </metadata>
+            </package>
+            """
+        );
+
+        var metadata = new NuGetPackageMetadataParser().Parse(stream);
+
+        Assert.NotNull(metadata);
+        Assert.NotNull(metadata!.Repository);
+        Assert.Null(metadata.Repository!.Type);
+        Assert.Equal("https://github.com/example/repo", metadata.Repository.Url);
+        Assert.Null(metadata.Repository.Branch);
+        Assert.Null(metadata.Repository.Commit);
+    }
+
+    [Fact]
     public void ParseReturnsNullWhenMetadataElementIsMissing()
     {
         using var stream = CreateStream(
@@ -64,6 +109,7 @@ public sealed class NuGetPackageMetadataParserTests
               <metadata>
                 <id>Package</id>
                 <license type="file">LICENSE.txt</license>
+                <repository type="git" url="https://github.com/example/repo" branch="main" commit="abcdef" />
                 <requireLicenseAcceptance>true</requireLicenseAcceptance>
                 <tags>one two  three</tags>
                 <dependencies>
@@ -84,6 +130,11 @@ public sealed class NuGetPackageMetadataParserTests
         Assert.NotNull(metadata);
         Assert.Equal("file", metadata!.LicenseType);
         Assert.Equal("LICENSE.txt", metadata.License);
+        Assert.NotNull(metadata.Repository);
+        Assert.Equal("git", metadata.Repository!.Type);
+        Assert.Equal("https://github.com/example/repo", metadata.Repository.Url);
+        Assert.Equal("main", metadata.Repository.Branch);
+        Assert.Equal("abcdef", metadata.Repository.Commit);
         Assert.True(metadata.RequireLicenseAcceptance);
         Assert.Equal(["one", "two", "three"], metadata.Tags);
         Assert.Equal(2, metadata.DependencyGroups.Count);

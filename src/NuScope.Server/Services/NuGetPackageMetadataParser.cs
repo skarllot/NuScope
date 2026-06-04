@@ -41,6 +41,7 @@ public sealed class NuGetPackageMetadataParser : INuGetPackageMetadataParser
             LicenseUrl = Value(metadata, "licenseUrl"),
             LicenseType = Element(metadata, "license")?.Attribute("type")?.Value,
             License = Element(metadata, "license")?.Value,
+            Repository = ParseRepository(metadata),
             RequireLicenseAcceptance =
                 Value(metadata, "requireLicenseAcceptance") is { } requireLicenseAcceptance
                 && bool.TryParse(requireLicenseAcceptance, out var parsedRequireLicenseAcceptance)
@@ -91,6 +92,20 @@ public sealed class NuGetPackageMetadataParser : INuGetPackageMetadataParser
                 Exclude = dependency.Attribute("exclude")?.Value,
             })
             .ToArray();
+
+    private static NuGetRepositoryMetadata? ParseRepository(XElement metadata)
+    {
+        var repository = Element(metadata, "repository");
+        return repository is null
+            ? null
+            : new NuGetRepositoryMetadata
+            {
+                Type = repository.Attribute("type")?.Value,
+                Url = repository.Attribute("url")?.Value,
+                Branch = repository.Attribute("branch")?.Value,
+                Commit = repository.Attribute("commit")?.Value,
+            };
+    }
 
     private static string? Value(XElement metadata, string name) => Element(metadata, name)?.Value;
 
