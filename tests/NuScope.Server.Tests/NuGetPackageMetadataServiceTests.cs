@@ -100,6 +100,32 @@ public sealed class NuGetPackageMetadataServiceTests
     }
 
     [Fact]
+    public void GetNuGetPackageMetadataUsesLatestNumericPrereleaseIdentifierWhenVersionIsNotProvided()
+    {
+        var lowPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta.2");
+        var highPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta.10");
+        var nuspecPath = Path.Combine(highPrereleasePackageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0-beta.10" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(lowPrereleasePackageDirectory);
+        fileSystem.AddDirectory(highPrereleasePackageDirectory);
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        Assert.True(result.IsFound);
+        Assert.Equal("2.0.0-beta.10", result.Version);
+        Assert.Equal(highPrereleasePackageDirectory, result.PackageDirectory);
+        Assert.Equal(nuspecPath, result.NuspecPath);
+        Assert.Same(expectedMetadata, result.Metadata);
+        Assert.True(parser.WasCalled);
+    }
+
+    [Fact]
     public void GetNuGetPackageMetadataReturnsNotFoundWhenVersionIsNotProvidedAndPackageIsMissing()
     {
         var fileSystem = new MockFileSystem();

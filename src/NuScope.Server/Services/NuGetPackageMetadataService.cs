@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO.Abstractions;
 using Raiqub.NuSpec.Models;
 
@@ -128,15 +129,66 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
                 }
             }
 
+            return ComparePrerelease(other);
+        }
+
+        private int ComparePrerelease(PackageVersion other)
+        {
             return (Prerelease, other.Prerelease) switch
             {
                 (null, null) => 0,
                 (null, _) => 1,
                 (_, null) => -1,
-                _ => StringComparer.OrdinalIgnoreCase.Compare(Prerelease, other.Prerelease),
+                _ => ComparePrereleaseIdentifiers(Prerelease, other.Prerelease),
             };
         }
 
         private int GetReleasePart(int index) => index < Release.Length ? Release[index] : 0;
+
+        private static int ComparePrereleaseIdentifiers(string prerelease, string otherPrerelease)
+        {
+            var identifiers = prerelease.Split('.');
+            var otherIdentifiers = otherPrerelease.Split('.');
+            var identifierLength = Math.Max(identifiers.Length, otherIdentifiers.Length);
+
+            for (var index = 0; index < identifierLength; index++)
+            {
+                if (index >= identifiers.Length)
+                {
+                    return -1;
+                }
+
+                if (index >= otherIdentifiers.Length)
+                {
+                    return 1;
+                }
+
+                var identifier = identifiers[index];
+                var otherIdentifier = otherIdentifiers[index];
+                var identifierIsNumeric = IsNumericIdentifier(identifier);
+                var otherIdentifierIsNumeric = IsNumericIdentifier(otherIdentifier);
+
+                var comparison = (identifierIsNumeric, otherIdentifierIsNumeric) switch
+                {
+                    (true, false) => -1,
+                    (false, true) => 1,
+                    _ => CultureInfo.InvariantCulture.CompareInfo.Compare(
+                        identifier,
+                        otherIdentifier,
+                        CompareOptions.IgnoreCase | CompareOptions.NumericOrdering
+                    ),
+                };
+
+                if (comparison != 0)
+                {
+                    return comparison;
+                }
+            }
+
+            return 0;
+        }
+
+        private static bool IsNumericIdentifier(string identifier) =>
+            identifier.Length > 0 && identifier.All(char.IsAsciiDigit);
     }
 }
