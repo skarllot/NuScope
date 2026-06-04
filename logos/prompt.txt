@@ -1,0 +1,15 @@
+Create a clean, modern logo for **NuScope**, a NuGet-focused MCP server for exploring packages, metadata, and source code.
+
+Design concept: combine the recognizable **NuGet package/cube identity** with a **scope, magnifying glass, or scanning lens** to communicate package exploration and source-code inspection. Use a compact icon suitable for a NuGet package logo.
+
+Style: flat vector, professional developer-tool branding, minimal geometry, sharp but friendly. Use NuGet-inspired blue tones with white/light accents, optionally subtle purple or cyan highlights for “AI/MCP” feel. The icon should work well at small sizes, with strong silhouette and no tiny text.
+
+Elements to include:
+- NuGet-style package cube or box
+- Magnifying glass, scope reticle, or scanning ring
+- Subtle code/metadata hint, such as `{ }`, dots, nodes, or small document lines
+- Optional “NuScope” wordmark only if legible
+
+Avoid: photorealism, clutter, gradients that reduce readability, excessive detail, generic robot imagery, or copying the official NuGet logo exactly.
+
+Output: square app/package logo, transparent or solid light background, vector-like, high contrast, polished open-source developer tooling aesthetic.
