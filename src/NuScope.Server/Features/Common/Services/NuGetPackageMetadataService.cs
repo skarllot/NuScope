@@ -1,22 +1,20 @@
 using System.Globalization;
 using System.IO.Abstractions;
-using Raiqub.NuSpec.Models;
+using Raiqub.NuSpec.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Services;
+namespace Raiqub.NuSpec.Features.Common.Services;
 
 public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPackageMetadataParser parser)
     : INuGetPackageMetadataService
 {
-    public NuGetPackageMetadataResult GetNuGetPackageMetadata(string packageName, string? version = null)
+    public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
 
         var resolvedVersion = string.IsNullOrWhiteSpace(version) ? GetLatestVersion(packageName) : version;
         if (resolvedVersion is null)
         {
-            return NuGetPackageMetadataResult.NotFound(
-                packageName,
-                string.Empty,
+            return NuGetPackageMetadataLookup.NotFound(
                 $"Package '{packageName}' was not found in the local NuGet cache."
             );
         }
@@ -24,9 +22,7 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
         var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
         if (!fileSystem.Directory.Exists(packageDirectory))
         {
-            return NuGetPackageMetadataResult.NotFound(
-                packageName,
-                resolvedVersion,
+            return NuGetPackageMetadataLookup.NotFound(
                 $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
             );
         }
@@ -34,18 +30,14 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
         var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
         if (nuspecPaths.Length == 0)
         {
-            return NuGetPackageMetadataResult.NotFound(
-                packageName,
-                resolvedVersion,
+            return NuGetPackageMetadataLookup.NotFound(
                 $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
             );
         }
 
         if (nuspecPaths.Length > 1)
         {
-            return NuGetPackageMetadataResult.NotFound(
-                packageName,
-                resolvedVersion,
+            return NuGetPackageMetadataLookup.NotFound(
                 $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
             );
         }
@@ -56,14 +48,12 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
         var metadata = parser.Parse(stream);
         if (metadata is null)
         {
-            return NuGetPackageMetadataResult.NotFound(
-                packageName,
-                resolvedVersion,
+            return NuGetPackageMetadataLookup.NotFound(
                 $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
             );
         }
 
-        return NuGetPackageMetadataResult.Found(packageName, resolvedVersion, packageDirectory, nuspecPath, metadata);
+        return NuGetPackageMetadataLookup.Found(metadata);
     }
 
     private string? GetLatestVersion(string packageName)
