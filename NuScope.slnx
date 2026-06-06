@@ -1,4 +1,5 @@
 <Solution>
+    <Project Path="src/NuScope.AppHost/NuScope.AppHost.csproj" />
     <Project Path="src/NuScope.Server/NuScope.Server.csproj" />
     <Project Path="tests/NuScope.Server.Tests/NuScope.Server.Tests.csproj" />
 </Solution>
