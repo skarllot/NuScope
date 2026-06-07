@@ -22,6 +22,8 @@ public sealed class NuGetPackageUrlExtractorTests
 
         var result = NuGetPackageUrlExtractor.Extract(metadata);
 
+        Assert.Equal(metadata.Id, result.Id);
+        Assert.Equal(metadata.Version, result.Version);
         Assert.Equal("https://example.com/project", result.ProjectUrl);
         Assert.Equal("https://github.com/example/package", result.RepositoryUrl);
 
@@ -44,6 +46,8 @@ public sealed class NuGetPackageUrlExtractorTests
 
         var result = NuGetPackageUrlExtractor.Extract(metadata);
 
+        Assert.Equal(metadata.Id, result.Id);
+        Assert.Equal(metadata.Version, result.Version);
         Assert.Null(result.ProjectUrl);
         Assert.Null(result.RepositoryUrl);
         Assert.Empty(result.OtherUrls);
@@ -63,6 +67,8 @@ public sealed class NuGetPackageUrlExtractorTests
 
         var result = NuGetPackageUrlExtractor.Extract(metadata);
 
+        Assert.Equal(metadata.Id, result.Id);
+        Assert.Equal(metadata.Version, result.Version);
         Assert.Collection(
             result.OtherUrls,
             url =>

@@ -162,6 +162,118 @@ public sealed class NuGetOrgPackageMetadataClientTests
         AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "could not be reached");
     }
 
+    [Fact]
+    public void GetNuGetPackageMetadataRejectsAbsolutePackageIdentifiers()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+            throw new Xunit.Sdk.XunitException("Request should not be sent.")
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("https://example.com/package"));
+        Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("/Newtonsoft.Json"));
+        Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("\\Newtonsoft.Json"));
+        Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("Newtonsoft/Json"));
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataIgnoresMalformedVersions()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(
+                    """
+                    {
+                      "resources": [
+                        {
+                          "@id": "https://api.nuget.org/v3-flatcontainer/",
+                          "@type": "PackageBaseAddress/3.0.0"
+                        }
+                      ]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["1..0", "2.0.0"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/2.0.0/package.with.case.nuspec" =>
+                    XmlResponse(
+                        """
+                        <package>
+                          <metadata>
+                            <id>Package.With.Case</id>
+                            <version>2.0.0</version>
+                          </metadata>
+                        </package>
+                        """
+                    ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0", metadata.Version);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataHandlesPrereleaseHeavyLists()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(
+                    """
+                    {
+                      "resources": [
+                        {
+                          "@id": "https://api.nuget.org/v3-flatcontainer/",
+                          "@type": "PackageBaseAddress/3.0.0"
+                        }
+                      ]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/prerelease.only/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["2.0.0-alpha", "2.0.0-beta", "2.0.1-rc1"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/prerelease.only/2.0.1-rc1/prerelease.only.nuspec" =>
+                    XmlResponse(
+                        """
+                        <package>
+                          <metadata>
+                            <id>Prerelease.Only</id>
+                            <version>2.0.1-rc1</version>
+                          </metadata>
+                        </package>
+                        """
+                    ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Prerelease.Only");
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.1-rc1", metadata.Version);
+    }
+
     private static HttpResponseMessage JsonResponse(string content)
     {
         return new HttpResponseMessage(HttpStatusCode.OK)

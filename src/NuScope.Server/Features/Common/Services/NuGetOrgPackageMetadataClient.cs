@@ -11,7 +11,7 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
 
     public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
+        var packageId = NormalizePackageId(packageName);
 
         try
         {
@@ -25,8 +25,7 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
                 );
             }
 
-            var packageId = packageName.ToLowerInvariant();
-            var versionsResponse = Send(packageBaseAddress, $"{packageId}/index.json");
+            using var versionsResponse = Send(packageBaseAddress, $"{packageId}/index.json");
             if (versionsResponse.StatusCode == HttpStatusCode.NotFound)
             {
                 return NuGetPackageMetadataLookup.NotFound($"Package '{packageName}' was not found on nuget.org.");
@@ -42,12 +41,9 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             }
 
             string[]? versions;
-            using (versionsResponse)
-            {
-                using var versionsStream = versionsResponse.Content.ReadAsStream();
-                using var versionsDocument = JsonDocument.Parse(versionsStream);
-                versions = GetVersions(versionsDocument.RootElement);
-            }
+            using var versionsStream = versionsResponse.Content.ReadAsStream();
+            using var versionsDocument = JsonDocument.Parse(versionsStream);
+            versions = GetVersions(versionsDocument.RootElement);
 
             if (versions is null)
             {
@@ -68,7 +64,7 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
                     );
             }
 
-            var nuspecResponse = Send(
+            using var nuspecResponse = Send(
                 packageBaseAddress,
                 $"{packageId}/{resolvedVersion.ToLowerInvariant()}/{packageId}.nuspec"
             );
@@ -89,11 +85,8 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             }
 
             NuGetPackageMetadata? metadata;
-            using (nuspecResponse)
-            {
-                using var nuspecStream = nuspecResponse.Content.ReadAsStream();
-                metadata = parser.Parse(nuspecStream);
-            }
+            using var nuspecStream = nuspecResponse.Content.ReadAsStream();
+            metadata = parser.Parse(nuspecStream);
 
             return metadata is null
                 ? NuGetPackageMetadataLookup.FromProblem(
@@ -127,6 +120,36 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
                 )
             );
         }
+    }
+
+    private static string NormalizePackageId(string packageName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
+
+        var normalizedPackageName = packageName.Trim();
+        if (
+            normalizedPackageName.Contains("://", StringComparison.Ordinal)
+            || normalizedPackageName.StartsWith('/')
+            || normalizedPackageName.StartsWith('\\')
+            || Uri.TryCreate(normalizedPackageName, UriKind.Absolute, out _)
+        )
+        {
+            throw new ArgumentException("Package name must be a relative NuGet package ID.", nameof(packageName));
+        }
+
+        if (
+            normalizedPackageName.Any(character =>
+                !char.IsAsciiLetterOrDigit(character) && character is not '.' and not '-' and not '_'
+            )
+        )
+        {
+            throw new ArgumentException(
+                "Package name contains characters that are not valid in a NuGet package ID.",
+                nameof(packageName)
+            );
+        }
+
+        return normalizedPackageName.ToLowerInvariant();
     }
 
     private Uri? GetPackageBaseAddress()

@@ -8,17 +8,27 @@ internal sealed record NuGetPackageVersion(int[] Release, string? Prerelease) : 
     {
         var versionWithoutMetadata = version.Split('+', 2)[0];
         var parts = versionWithoutMetadata.Split('-', 2);
-        var release = parts[0]
-            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(part => int.TryParse(part, out var parsed) ? (int?)parsed : null)
-            .ToArray();
+        var releaseParts = parts[0].Split('.', StringSplitOptions.TrimEntries);
+        if (releaseParts.Length == 0)
+        {
+            return null;
+        }
 
-        return release.Length == 0 || release.Any(part => part is null)
-            ? null
-            : new NuGetPackageVersion(
-                release.Select(part => part!.Value).ToArray(),
-                parts.Length > 1 ? parts[1] : null
-            );
+        var release = new int[releaseParts.Length];
+        for (var index = 0; index < releaseParts.Length; index++)
+        {
+            var part = releaseParts[index];
+            if (
+                part.Length == 0
+                || !part.All(char.IsAsciiDigit)
+                || !int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out release[index])
+            )
+            {
+                return null;
+            }
+        }
+
+        return new NuGetPackageVersion(release, parts.Length > 1 ? parts[1] : null);
     }
 
     public int CompareTo(NuGetPackageVersion? other)

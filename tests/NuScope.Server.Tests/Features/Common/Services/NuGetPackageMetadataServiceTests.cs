@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using Raiqub.NuSpec.Features.Common.Models;
 using Raiqub.NuSpec.Features.Common.Services;
@@ -119,6 +120,8 @@ public sealed class NuGetPackageMetadataServiceTests
     public void GetNuGetPackageMetadataIgnoresInvalidVersionDirectoriesWhenSelectingLatest()
     {
         var invalidVersionDirectory = GetPackageDirectory("Package.With.Metadata", "not-a-version");
+        var emptyReleaseVersionDirectory = GetPackageDirectory("Package.With.Metadata", "1..0");
+        var negativeReleaseVersionDirectory = GetPackageDirectory("Package.With.Metadata", "1.-1.0");
         var prereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta");
         var latestPackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
         var nuspecPath = Path.Combine(latestPackageDirectory, "package.with.metadata.nuspec");
@@ -127,6 +130,8 @@ public sealed class NuGetPackageMetadataServiceTests
             new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
         );
         fileSystem.AddDirectory(invalidVersionDirectory);
+        fileSystem.AddDirectory(emptyReleaseVersionDirectory);
+        fileSystem.AddDirectory(negativeReleaseVersionDirectory);
         fileSystem.AddDirectory(prereleasePackageDirectory);
         fileSystem.AddDirectory(latestPackageDirectory);
         var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
@@ -138,6 +143,37 @@ public sealed class NuGetPackageMetadataServiceTests
         var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
         Assert.Equal("2.0.0", success.Version);
         Assert.Equal(expectedMetadata.Id, success.Id);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsInternalServerErrorWhenResolvingLatestVersionFails()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Metadata");
+        var innerFileSystem = new MockFileSystem();
+        innerFileSystem.AddDirectory(packageRootDirectory);
+        var fileSystem = new ThrowingOnEnumerateFileSystem(
+            innerFileSystem,
+            packageRootDirectory,
+            new IOException("Read failed.")
+        );
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            NuGetPackageMetadataLookup.Found(new NuGetPackageMetadata { Id = "Ignored", Version = "9.9.9" })
+        );
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        AssertProblem(
+            result,
+            ProblemTypes.InternalServerError,
+            "Internal Server Error",
+            500,
+            "resolving the latest available version"
+        );
+        Assert.Null(remoteClient.PackageName);
+        Assert.False(parser.WasCalled);
     }
 
     [Fact]
@@ -471,6 +507,56 @@ public sealed class NuGetPackageMetadataServiceTests
             PackageName = packageName;
             Version = version;
             return Result;
+        }
+    }
+
+    private sealed class ThrowingOnEnumerateFileSystem : FileSystemBase
+    {
+        private readonly IFileSystem innerFileSystem;
+
+        public ThrowingOnEnumerateFileSystem(IFileSystem innerFileSystem, string pathToThrow, IOException exception)
+        {
+            this.innerFileSystem = innerFileSystem;
+            Directory = new ThrowingOnEnumerateMockDirectory(
+                (IMockFileDataAccessor)innerFileSystem,
+                pathToThrow,
+                exception
+            );
+        }
+
+        public override IDirectory Directory { get; }
+
+        public override IFile File => innerFileSystem.File;
+
+        public override IFileInfoFactory FileInfo => innerFileSystem.FileInfo;
+
+        public override IFileVersionInfoFactory FileVersionInfo => innerFileSystem.FileVersionInfo;
+
+        public override IFileStreamFactory FileStream => innerFileSystem.FileStream;
+
+        public override IPath Path => innerFileSystem.Path;
+
+        public override IDirectoryInfoFactory DirectoryInfo => innerFileSystem.DirectoryInfo;
+
+        public override IDriveInfoFactory DriveInfo => innerFileSystem.DriveInfo;
+
+        public override IFileSystemWatcherFactory FileSystemWatcher => innerFileSystem.FileSystemWatcher;
+    }
+
+    private sealed class ThrowingOnEnumerateMockDirectory(
+        IMockFileDataAccessor fileDataAccessor,
+        string pathToThrow,
+        IOException exception
+    ) : MockDirectory(fileDataAccessor, Directory.GetCurrentDirectory())
+    {
+        public override IEnumerable<string> EnumerateDirectories(string path)
+        {
+            if (string.Equals(path, pathToThrow, StringComparison.OrdinalIgnoreCase))
+            {
+                throw exception;
+            }
+
+            return base.EnumerateDirectories(path);
         }
     }
 }

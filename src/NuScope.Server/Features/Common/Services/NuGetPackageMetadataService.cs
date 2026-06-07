@@ -41,28 +41,36 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
 
     private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string? version)
     {
-        var resolvedVersion = string.IsNullOrWhiteSpace(version) ? GetLatestVersion(packageName) : version;
-        if (resolvedVersion is null)
-        {
-            return new LocalNuGetPackageMetadataLookup(
-                NuGetPackageMetadataLookup.NotFound($"Package '{packageName}' was not found in the local NuGet cache."),
-                ShouldFallback: true
-            );
-        }
-
-        var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
-        if (!fileSystem.Directory.Exists(packageDirectory))
-        {
-            return new LocalNuGetPackageMetadataLookup(
-                NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
-                ),
-                ShouldFallback: true
-            );
-        }
+        var resolvedVersion = version;
 
         try
         {
+            if (string.IsNullOrWhiteSpace(resolvedVersion))
+            {
+                resolvedVersion = GetLatestVersion(packageName);
+            }
+
+            if (resolvedVersion is null)
+            {
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' was not found in the local NuGet cache."
+                    ),
+                    ShouldFallback: true
+                );
+            }
+
+            var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
+            if (!fileSystem.Directory.Exists(packageDirectory))
+            {
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
+                    ),
+                    ShouldFallback: true
+                );
+            }
+
             var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
             if (nuspecPaths.Length == 0)
             {
@@ -108,7 +116,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             return new LocalNuGetPackageMetadataLookup(
                 NuGetPackageMetadataLookup.FromProblem(
                     NuGetProblemDetailsResult.Forbidden(
-                        $"Access to package '{packageName}' version '{resolvedVersion}' in the local NuGet cache was denied."
+                        $"Access to {DescribeLocalPackageLookup(packageName, resolvedVersion)} in the local NuGet cache was denied."
                     )
                 ),
                 ShouldFallback: false
@@ -119,7 +127,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             return new LocalNuGetPackageMetadataLookup(
                 NuGetPackageMetadataLookup.FromProblem(
                     NuGetProblemDetailsResult.InternalServerError(
-                        $"An I/O error occurred while reading package '{packageName}' version '{resolvedVersion}' from the local NuGet cache."
+                        $"An I/O error occurred while reading {DescribeLocalPackageLookup(packageName, resolvedVersion)} from the local NuGet cache."
                     )
                 ),
                 ShouldFallback: false
@@ -155,6 +163,13 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     {
         var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         return fileSystem.Path.Combine(userProfile, ".nuget", "packages", packageName.ToLowerInvariant());
+    }
+
+    private static string DescribeLocalPackageLookup(string packageName, string? resolvedVersion)
+    {
+        return resolvedVersion is null
+            ? $"package '{packageName}' while resolving the latest available version"
+            : $"package '{packageName}' version '{resolvedVersion}'";
     }
 
     private sealed record LocalNuGetPackageMetadataLookup(NuGetPackageMetadataLookup Lookup, bool ShouldFallback);
