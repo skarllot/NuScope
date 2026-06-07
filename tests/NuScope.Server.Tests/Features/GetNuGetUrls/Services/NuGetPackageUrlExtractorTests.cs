@@ -11,6 +11,8 @@ public sealed class NuGetPackageUrlExtractorTests
     {
         var metadata = new NuGetPackageMetadata
         {
+            Id = "Package.With.Urls",
+            Version = "1.0.0",
             ProjectUrl = " https://example.com/project ",
             Repository = new NuGetRepositoryMetadata { Url = " https://github.com/example/package " },
             IconUrl = " https://example.com/project ",
@@ -33,6 +35,8 @@ public sealed class NuGetPackageUrlExtractorTests
     {
         var metadata = new NuGetPackageMetadata
         {
+            Id = "Package.With.Blank.Urls",
+            Version = "1.0.0",
             ProjectUrl = "   ",
             IconUrl = "not a url",
             LicenseUrl = "ftp://example.com/license",
@@ -50,6 +54,8 @@ public sealed class NuGetPackageUrlExtractorTests
     {
         var metadata = new NuGetPackageMetadata
         {
+            Id = "Package.With.Urls.In.Text",
+            Version = "1.0.0",
             Description = "Docs: https://example.com/docs, support: http://example.com/support!",
             ReleaseNotes = "Also see https://example.com/docs.",
             Copyright = "Copyright https://example.com/legal)",

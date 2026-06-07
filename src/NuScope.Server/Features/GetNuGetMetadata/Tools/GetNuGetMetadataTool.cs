@@ -16,11 +16,11 @@ public sealed class GetNuGetMetadataTool(INuGetPackageMetadataService metadataSe
         Idempotent = true,
         OpenWorld = true
     )]
-    [Description("Reads package metadata from the local NuGet cache (~/.nuget/packages) for a package id and version.")]
+    [Description("Reads package metadata for a package id and version.")]
     public NuGetToolResult GetNuGetMetadata(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description(
-            "The exact package version, for example '13.0.3'. If omitted, the latest version found in the local NuGet cache is used."
+            "The exact package version, for example '13.0.3'. If omitted, the latest available version is used."
         )]
             string? version = null
     )

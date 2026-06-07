@@ -12,13 +12,16 @@ public sealed class NuGetPackageMetadataServiceTests
     {
         var fileSystem = new MockFileSystem();
         var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient();
 
-        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
             "Missing.Package",
             "1.0.0"
         );
 
-        AssertNotFoundProblem(result, "was not found");
+        Assert.Equal(remoteClient.Result, result);
+        Assert.Equal("Missing.Package", remoteClient.PackageName);
+        Assert.Equal("1.0.0", remoteClient.Version);
         Assert.False(parser.WasCalled);
     }
 
@@ -226,11 +229,82 @@ public sealed class NuGetPackageMetadataServiceTests
     {
         var fileSystem = new MockFileSystem();
         var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient();
 
-        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata("Missing.Package");
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Missing.Package"
+        );
 
-        AssertNotFoundProblem(result, "was not found");
+        Assert.Equal(remoteClient.Result, result);
+        Assert.Equal("Missing.Package", remoteClient.PackageName);
+        Assert.Null(remoteClient.Version);
         Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataFallsBackToRemoteWhenRequestedVersionDirectoryIsMissing()
+    {
+        var fileSystem = new MockFileSystem();
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "1.0.0" };
+        var remoteClient = new RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup.Found(remoteMetadata));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata",
+            "1.0.0"
+        );
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal(remoteMetadata.Id, metadata.Id);
+        Assert.Equal(remoteMetadata.Version, metadata.Version);
+        Assert.Equal("Package.With.Metadata", remoteClient.PackageName);
+        Assert.Equal("1.0.0", remoteClient.Version);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataFallsBackToRemoteWhenNoLocalVersionCanBeResolved()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Metadata");
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddDirectory(packageRootDirectory);
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "not-a-version"));
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "3.0.0" };
+        var remoteClient = new RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup.Found(remoteMetadata));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("3.0.0", metadata.Version);
+        Assert.Equal("Package.With.Metadata", remoteClient.PackageName);
+        Assert.Null(remoteClient.Version);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataDoesNotFallBackWhenLocalNuspecIsMalformed()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Malformed.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.malformed.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            NuGetPackageMetadataLookup.Found(new NuGetPackageMetadata { Id = "Ignored", Version = "9.9.9" })
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new NuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageMetadata("Package.With.Malformed.Nuspec", "1.0.0");
+
+        AssertNotFoundProblem(result, "invalid or malformed .nuspec file");
+        Assert.Null(remoteClient.PackageName);
     }
 
     [Fact]
@@ -359,6 +433,12 @@ public sealed class NuGetPackageMetadataServiceTests
         );
     }
 
+    private static string GetPackageRootDirectory(string packageName)
+    {
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return Path.Combine(userProfile, ".nuget", "packages", packageName.ToLowerInvariant());
+    }
+
     private sealed class RecordingNuGetPackageMetadataParser(NuGetPackageMetadata? result = null)
         : INuGetPackageMetadataParser
     {
@@ -374,5 +454,23 @@ public sealed class NuGetPackageMetadataServiceTests
     private sealed class ThrowingNuGetPackageMetadataParser(Exception exception) : INuGetPackageMetadataParser
     {
         public NuGetPackageMetadata? Parse(Stream stream) => throw exception;
+    }
+
+    private sealed class RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup? result = null)
+        : INuGetRemotePackageMetadataClient
+    {
+        public string? PackageName { get; private set; }
+
+        public string? Version { get; private set; }
+
+        public NuGetPackageMetadataLookup Result { get; } =
+            result ?? NuGetPackageMetadataLookup.NotFound("Package was not found on nuget.org.");
+
+        public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
+        {
+            PackageName = packageName;
+            Version = version;
+            return Result;
+        }
     }
 }

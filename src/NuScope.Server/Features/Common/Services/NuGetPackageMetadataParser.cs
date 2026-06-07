@@ -24,10 +24,17 @@ public sealed class NuGetPackageMetadataParser : INuGetPackageMetadataParser
             return null;
         }
 
+        var id = Value(metadata, "id");
+        var version = Value(metadata, "version");
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
+        {
+            return null;
+        }
+
         return new NuGetPackageMetadata
         {
-            Id = Value(metadata, "id"),
-            Version = Value(metadata, "version"),
+            Id = id,
+            Version = version,
             Title = Value(metadata, "title"),
             Authors = Value(metadata, "authors"),
             Owners = Value(metadata, "owners"),
