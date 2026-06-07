@@ -1,9 +1,9 @@
 using System.IO.Abstractions.TestingHelpers;
-using Raiqub.NuSpec.Models;
-using Raiqub.NuSpec.Services;
+using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuSpec.Features.Common.Services;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests;
+namespace Raiqub.NuSpec.Tests.Features.Common.Services;
 
 public sealed class NuGetPackageMetadataServiceTests
 {
@@ -18,11 +18,7 @@ public sealed class NuGetPackageMetadataServiceTests
             "1.0.0"
         );
 
-        Assert.False(result.IsFound);
-        Assert.Null(result.PackageDirectory);
-        Assert.Null(result.NuspecPath);
-        Assert.Null(result.Metadata);
-        Assert.Contains("was not found", result.Message);
+        AssertNotFoundProblem(result, "was not found");
         Assert.False(parser.WasCalled);
     }
 
@@ -39,11 +35,7 @@ public sealed class NuGetPackageMetadataServiceTests
             "1.0.0"
         );
 
-        Assert.False(result.IsFound);
-        Assert.Null(result.PackageDirectory);
-        Assert.Null(result.NuspecPath);
-        Assert.Null(result.Metadata);
-        Assert.Contains("no .nuspec file was found", result.Message);
+        AssertNotFoundProblem(result, "no .nuspec file was found");
         Assert.False(parser.WasCalled);
     }
 
@@ -64,10 +56,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "2.0.0"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal(packageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal(expectedMetadata.Id, success.Id);
+        Assert.Equal(expectedMetadata.Version, success.Version);
         Assert.True(parser.WasCalled);
     }
 
@@ -91,11 +82,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0", result.Version);
-        Assert.Equal(latestPackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
         Assert.True(parser.WasCalled);
     }
 
@@ -117,11 +106,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0-beta.10", result.Version);
-        Assert.Equal(highPrereleasePackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0-beta.10", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
         Assert.True(parser.WasCalled);
     }
 
@@ -145,11 +132,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0", result.Version);
-        Assert.Equal(latestPackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
     }
 
     [Fact]
@@ -170,11 +155,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0", result.Version);
-        Assert.Equal(stablePackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
     }
 
     [Fact]
@@ -195,11 +178,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0-beta.1", result.Version);
-        Assert.Equal(longerPrereleasePackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0-beta.1", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
     }
 
     [Fact]
@@ -220,11 +201,9 @@ public sealed class NuGetPackageMetadataServiceTests
             "Package.With.Metadata"
         );
 
-        Assert.True(result.IsFound);
-        Assert.Equal("2.0.0-alpha.beta", result.Version);
-        Assert.Equal(alphabeticPrereleasePackageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
-        Assert.Same(expectedMetadata, result.Metadata);
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0-alpha.beta", success.Version);
+        Assert.Equal(expectedMetadata.Id, success.Id);
     }
 
     [Fact]
@@ -238,12 +217,7 @@ public sealed class NuGetPackageMetadataServiceTests
             "1.0.0"
         );
 
-        Assert.False(result.IsFound);
-        Assert.Equal("1.0.0", result.Version);
-        Assert.Null(result.PackageDirectory);
-        Assert.Null(result.NuspecPath);
-        Assert.Null(result.Metadata);
-        Assert.Contains("version '1.0.0' was not found", result.Message);
+        AssertNotFoundProblem(result, "version '1.0.0' was not found");
         Assert.False(parser.WasCalled);
     }
 
@@ -255,12 +229,7 @@ public sealed class NuGetPackageMetadataServiceTests
 
         var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata("Missing.Package");
 
-        Assert.False(result.IsFound);
-        Assert.Equal(string.Empty, result.Version);
-        Assert.Null(result.PackageDirectory);
-        Assert.Null(result.NuspecPath);
-        Assert.Null(result.Metadata);
-        Assert.Contains("was not found", result.Message);
+        AssertNotFoundProblem(result, "was not found");
         Assert.False(parser.WasCalled);
     }
 
@@ -279,9 +248,7 @@ public sealed class NuGetPackageMetadataServiceTests
             "1.0.0"
         );
 
-        Assert.False(result.IsFound);
-        Assert.Null(result.NuspecPath);
-        Assert.Contains("multiple .nuspec files were found", result.Message);
+        AssertNotFoundProblem(result, "multiple .nuspec files were found");
         Assert.False(parser.WasCalled);
     }
 
@@ -300,9 +267,7 @@ public sealed class NuGetPackageMetadataServiceTests
             new NuGetPackageMetadataParser()
         ).GetNuGetPackageMetadata("Package.With.Malformed.Nuspec", "1.0.0");
 
-        Assert.False(result.IsFound);
-        Assert.Null(result.Metadata);
-        Assert.Contains("invalid or malformed .nuspec file", result.Message);
+        AssertNotFoundProblem(result, "invalid or malformed .nuspec file");
     }
 
     [Fact]
@@ -320,9 +285,66 @@ public sealed class NuGetPackageMetadataServiceTests
             new NuGetPackageMetadataParser()
         ).GetNuGetPackageMetadata("Package.Without.Metadata.Element", "1.0.0");
 
-        Assert.False(result.IsFound);
+        AssertNotFoundProblem(result, "invalid or malformed .nuspec file");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsForbiddenWhenNuspecCannotBeOpened()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Protected.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.protected.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var parser = new ThrowingNuGetPackageMetadataParser(new UnauthorizedAccessException("Denied."));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Protected.Nuspec",
+            "1.0.0"
+        );
+
+        AssertProblem(result, ProblemTypes.Forbidden, "Forbidden", 403, "was denied");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsInternalServerErrorWhenReadingNuspecFails()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Failing.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.failing.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var parser = new ThrowingNuGetPackageMetadataParser(new IOException("Read failed."));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Failing.Nuspec",
+            "1.0.0"
+        );
+
+        AssertProblem(result, ProblemTypes.InternalServerError, "Internal Server Error", 500, "I/O error occurred");
+    }
+
+    private static void AssertNotFoundProblem(NuGetPackageMetadataLookup result, string expectedDetail)
+    {
+        AssertProblem(result, ProblemTypes.NotFound, "Not Found", 404, expectedDetail);
+    }
+
+    private static void AssertProblem(
+        NuGetPackageMetadataLookup result,
+        string expectedType,
+        string expectedTitle,
+        int expectedStatus,
+        string expectedDetail
+    )
+    {
         Assert.Null(result.Metadata);
-        Assert.Contains("invalid or malformed .nuspec file", result.Message);
+        Assert.NotNull(result.Problem);
+        Assert.Equal(expectedType, result.Problem.Type);
+        Assert.Equal(expectedTitle, result.Problem.Title);
+        Assert.Equal(expectedStatus, result.Problem.Status);
+        Assert.Contains(expectedDetail, result.Problem.Detail);
     }
 
     private static string GetPackageDirectory(string packageName, string version)
@@ -347,5 +369,10 @@ public sealed class NuGetPackageMetadataServiceTests
             WasCalled = true;
             return result;
         }
+    }
+
+    private sealed class ThrowingNuGetPackageMetadataParser(Exception exception) : INuGetPackageMetadataParser
+    {
+        public NuGetPackageMetadata? Parse(Stream stream) => throw exception;
     }
 }

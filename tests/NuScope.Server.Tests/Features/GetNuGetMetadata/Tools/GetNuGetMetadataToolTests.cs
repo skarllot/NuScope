@@ -1,15 +1,16 @@
 using System.IO.Abstractions.TestingHelpers;
-using Raiqub.NuSpec.Models;
-using Raiqub.NuSpec.Services;
-using Raiqub.NuSpec.Tools;
+using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuSpec.Features.Common.Services;
+using Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+using Raiqub.NuSpec.Features.GetNuGetMetadata.Tools;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests;
+namespace Raiqub.NuSpec.Tests.Features.GetNuGetMetadata.Tools;
 
-public sealed class NuGetPackageMetadataToolsTests
+public sealed class GetNuGetMetadataToolTests
 {
     [Fact]
-    public void GetNuGetPackageMetadataReturnsParsedMetadataWhenPackageExists()
+    public void GetNuGetMetadataReturnsParsedMetadataWhenPackageExists()
     {
         var packageDirectory = GetPackageDirectory("Newtonsoft.Json", "13.0.3");
         var nuspecPath = Path.Combine(packageDirectory, "newtonsoft.json.nuspec");
@@ -44,31 +45,26 @@ public sealed class NuGetPackageMetadataToolsTests
 
         fileSystem.AddDirectory(packageDirectory);
 
-        var result = new NuGetPackageMetadataTools(
+        var result = new GetNuGetMetadataTool(
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
-        ).GetNuGetPackageMetadata("Newtonsoft.Json");
+        ).GetNuGetMetadata("Newtonsoft.Json");
 
-        Assert.True(result.IsFound);
-        Assert.Equal("13.0.3", result.Version);
-        Assert.Equal(packageDirectory, result.PackageDirectory);
-        Assert.Equal(nuspecPath, result.NuspecPath);
+        var success = Assert.IsType<NuGetMetadataResult>(result);
+        Assert.Equal("Newtonsoft.Json", success.Id);
+        Assert.Equal("13.0.3", success.Version);
+        Assert.Equal("Json.NET", success.Title);
+        Assert.Equal("James Newton-King", success.Authors);
+        Assert.Equal("JSON framework for .NET", success.Description);
+        Assert.Equal("expression", success.LicenseType);
+        Assert.Equal("MIT", success.License);
+        Assert.NotNull(success.Repository);
+        Assert.Equal("git", success.Repository!.Type);
+        Assert.Equal("https://github.com/JamesNK/Newtonsoft.Json", success.Repository.Url);
+        Assert.Equal("master", success.Repository.Branch);
+        Assert.Equal("0123456789abcdef", success.Repository.Commit);
+        Assert.Equal(["json", "serialization", "parsing"], success.Tags);
 
-        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
-        Assert.Equal("Newtonsoft.Json", metadata.Id);
-        Assert.Equal("13.0.3", metadata.Version);
-        Assert.Equal("Json.NET", metadata.Title);
-        Assert.Equal("James Newton-King", metadata.Authors);
-        Assert.Equal("JSON framework for .NET", metadata.Description);
-        Assert.Equal("expression", metadata.LicenseType);
-        Assert.Equal("MIT", metadata.License);
-        Assert.NotNull(metadata.Repository);
-        Assert.Equal("git", metadata.Repository!.Type);
-        Assert.Equal("https://github.com/JamesNK/Newtonsoft.Json", metadata.Repository.Url);
-        Assert.Equal("master", metadata.Repository.Branch);
-        Assert.Equal("0123456789abcdef", metadata.Repository.Commit);
-        Assert.Equal(["json", "serialization", "parsing"], metadata.Tags);
-
-        var dependencyGroup = Assert.Single(metadata.DependencyGroups);
+        var dependencyGroup = Assert.Single(success.DependencyGroups);
         Assert.Equal("net8.0", dependencyGroup.TargetFramework);
 
         Assert.Equal(2, dependencyGroup.Dependencies.Count);
@@ -81,17 +77,24 @@ public sealed class NuGetPackageMetadataToolsTests
     }
 
     [Fact]
-    public void GetNuGetPackageMetadataReturnsNotFoundWhenPackageIsMissing()
+    public void GetNuGetMetadataReturnsNotFoundWhenPackageIsMissing()
     {
         var fileSystem = new MockFileSystem();
 
-        var result = new NuGetPackageMetadataTools(
+        var result = new GetNuGetMetadataTool(
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
-        ).GetNuGetPackageMetadata("Missing.Package", "1.0.0");
+        ).GetNuGetMetadata("Missing.Package", "1.0.0");
 
-        Assert.False(result.IsFound);
-        Assert.Null(result.Metadata);
-        Assert.Contains("was not found", result.Message);
+        AssertNotFoundProblem(result, "was not found");
+    }
+
+    private static void AssertNotFoundProblem(NuGetToolResult result, string expectedDetail)
+    {
+        var problem = Assert.IsType<NuGetProblemDetailsResult>(result);
+        Assert.Equal(ProblemTypes.NotFound, problem.Type);
+        Assert.Equal("Not Found", problem.Title);
+        Assert.Equal(404, problem.Status);
+        Assert.Contains(expectedDetail, problem.Detail);
     }
 
     private static string GetPackageDirectory(string packageName, string version)
