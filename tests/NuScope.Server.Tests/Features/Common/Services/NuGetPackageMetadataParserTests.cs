@@ -1,7 +1,7 @@
-using Raiqub.NuSpec.Services;
+using Raiqub.NuSpec.Features.Common.Services;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests;
+namespace Raiqub.NuSpec.Tests.Features.Common.Services;
 
 public sealed class NuGetPackageMetadataParserTests
 {
