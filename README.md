@@ -112,3 +112,26 @@ Run the skeleton MCP server over stdio:
 ```powershell
 dotnet run --project src/NuScope.Server/NuScope.Server.csproj --no-build
 ```
+
+Run the Aspire AppHost to launch MCP Inspector for the local server:
+
+```powershell
+dotnet run --project src/NuScope.AppHost/NuScope.AppHost.csproj
+```
+
+Open the `mcp-inspector` endpoint from the Aspire dashboard.
+
+NuScope remains a stdio-only MCP server. The AppHost starts MCP Inspector with:
+
+```powershell
+npx -y @modelcontextprotocol/inspector dotnet run --project src/NuScope.Server/NuScope.Server.csproj
+```
+
+Open the `mcp-inspector` `client` endpoint from the Aspire dashboard, or browse to:
+
+```text
+http://localhost:6284/?MCP_PROXY_PORT=6287&MCP_PROXY_AUTH_TOKEN=<token>
+```
+
+The AppHost uses ports `6284` and `6287` to avoid stale MCP Inspector browser storage from the default
+`localhost:6274` origin. The Aspire dashboard `client` link includes a per-run proxy authentication token.

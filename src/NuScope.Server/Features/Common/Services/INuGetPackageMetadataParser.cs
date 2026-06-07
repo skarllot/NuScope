@@ -1,6 +1,6 @@
-using Raiqub.NuSpec.Models;
+using Raiqub.NuSpec.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Services;
+namespace Raiqub.NuSpec.Features.Common.Services;
 
 public interface INuGetPackageMetadataParser
 {
