@@ -288,13 +288,63 @@ public sealed class NuGetPackageMetadataServiceTests
         AssertNotFoundProblem(result, "invalid or malformed .nuspec file");
     }
 
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsForbiddenWhenNuspecCannotBeOpened()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Protected.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.protected.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var parser = new ThrowingNuGetPackageMetadataParser(new UnauthorizedAccessException("Denied."));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Protected.Nuspec",
+            "1.0.0"
+        );
+
+        AssertProblem(result, ProblemTypes.Forbidden, "Forbidden", 403, "was denied");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsInternalServerErrorWhenReadingNuspecFails()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Failing.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.failing.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var parser = new ThrowingNuGetPackageMetadataParser(new IOException("Read failed."));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+            "Package.With.Failing.Nuspec",
+            "1.0.0"
+        );
+
+        AssertProblem(result, ProblemTypes.InternalServerError, "Internal Server Error", 500, "I/O error occurred");
+    }
+
     private static void AssertNotFoundProblem(NuGetPackageMetadataLookup result, string expectedDetail)
     {
-        var problem = Assert.IsType<NuGetProblemDetailsResult>(result.Problem);
-        Assert.Equal(ProblemTypes.NotFound, problem.Type);
-        Assert.Equal("Not Found", problem.Title);
-        Assert.Equal(404, problem.Status);
-        Assert.Contains(expectedDetail, problem.Detail);
+        AssertProblem(result, ProblemTypes.NotFound, "Not Found", 404, expectedDetail);
+    }
+
+    private static void AssertProblem(
+        NuGetPackageMetadataLookup result,
+        string expectedType,
+        string expectedTitle,
+        int expectedStatus,
+        string expectedDetail
+    )
+    {
+        Assert.Null(result.Metadata);
+        Assert.NotNull(result.Problem);
+        Assert.Equal(expectedType, result.Problem.Type);
+        Assert.Equal(expectedTitle, result.Problem.Title);
+        Assert.Equal(expectedStatus, result.Problem.Status);
+        Assert.Contains(expectedDetail, result.Problem.Detail);
     }
 
     private static string GetPackageDirectory(string packageName, string version)
@@ -319,5 +369,10 @@ public sealed class NuGetPackageMetadataServiceTests
             WasCalled = true;
             return result;
         }
+    }
+
+    private sealed class ThrowingNuGetPackageMetadataParser(Exception exception) : INuGetPackageMetadataParser
+    {
+        public NuGetPackageMetadata? Parse(Stream stream) => throw exception;
     }
 }

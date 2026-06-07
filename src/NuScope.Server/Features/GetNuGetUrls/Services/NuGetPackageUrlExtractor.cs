@@ -6,8 +6,8 @@ namespace Raiqub.NuSpec.Features.GetNuGetUrls.Services;
 
 public static class NuGetPackageUrlExtractor
 {
-    private static readonly Regex UrlRegex = new(
-        @"https?://[^\s<>()\[\]{}""']+",
+    private static readonly Regex _urlRegex = new(
+        @"https?://[^\s<>()\[\]{}""']*[^\s<>()\[\]{}""'.,;:!?]",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
     );
 
@@ -59,7 +59,7 @@ public static class NuGetPackageUrlExtractor
             return;
         }
 
-        foreach (var url in UrlRegex.Matches(value).Select(match => TrimUrl(match.Value)))
+        foreach (var url in _urlRegex.Matches(value).Select(match => match.Value.Trim()))
         {
             AddUrl(urls, excludedUrls, source, url);
         }
@@ -95,9 +95,11 @@ public static class NuGetPackageUrlExtractor
             return null;
         }
 
-        var url = TrimUrl(value.Trim());
-        return Uri.TryCreate(url, UriKind.Absolute, out _) ? url : null;
+        var url = value.Trim();
+        return
+            Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? url
+            : null;
     }
-
-    private static string TrimUrl(string value) => value.TrimEnd('.', ',', ';', ':', '!', '?', ')', ']', '}');
 }

@@ -24,3 +24,6 @@ builder
     .WithTools<GetNuGetUrlsTool>();
 
 await builder.Build().RunAsync();
+
+[System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+public partial class Program;

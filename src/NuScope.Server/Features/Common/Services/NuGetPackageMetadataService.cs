@@ -27,33 +27,52 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
             );
         }
 
-        var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
-        if (nuspecPaths.Length == 0)
+        try
         {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+            var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
+            if (nuspecPaths.Length == 0)
+            {
+                return NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+                );
+            }
+
+            if (nuspecPaths.Length > 1)
+            {
+                return NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                );
+            }
+
+            var nuspecPath = nuspecPaths[0];
+
+            using var stream = fileSystem.File.OpenRead(nuspecPath);
+            var metadata = parser.Parse(stream);
+            if (metadata is null)
+            {
+                return NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
+                );
+            }
+
+            return NuGetPackageMetadataLookup.Found(metadata);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NuGetPackageMetadataLookup.FromProblem(
+                NuGetProblemDetailsResult.Forbidden(
+                    $"Access to package '{packageName}' version '{resolvedVersion}' in the local NuGet cache was denied."
+                )
             );
         }
-
-        if (nuspecPaths.Length > 1)
+        catch (IOException)
         {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+            return NuGetPackageMetadataLookup.FromProblem(
+                NuGetProblemDetailsResult.InternalServerError(
+                    $"An I/O error occurred while reading package '{packageName}' version '{resolvedVersion}' from the local NuGet cache."
+                )
             );
         }
-
-        var nuspecPath = nuspecPaths[0];
-
-        using var stream = fileSystem.File.OpenRead(nuspecPath);
-        var metadata = parser.Parse(stream);
-        if (metadata is null)
-        {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
-            );
-        }
-
-        return NuGetPackageMetadataLookup.Found(metadata);
     }
 
     private string? GetLatestVersion(string packageName)

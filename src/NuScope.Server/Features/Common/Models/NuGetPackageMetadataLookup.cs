@@ -2,12 +2,20 @@ namespace Raiqub.NuSpec.Features.Common.Models;
 
 public sealed record NuGetPackageMetadataLookup
 {
-    public NuGetPackageMetadata? Metadata { get; init; }
+    private NuGetPackageMetadataLookup(NuGetPackageMetadata? metadata, NuGetProblemDetailsResult? problem)
+    {
+        Metadata = metadata;
+        Problem = problem;
+    }
 
-    public NuGetProblemDetailsResult? Problem { get; init; }
+    public NuGetPackageMetadata? Metadata { get; }
 
-    public static NuGetPackageMetadataLookup Found(NuGetPackageMetadata metadata) => new() { Metadata = metadata };
+    public NuGetProblemDetailsResult? Problem { get; }
+
+    public static NuGetPackageMetadataLookup Found(NuGetPackageMetadata metadata) => new(metadata, null);
+
+    public static NuGetPackageMetadataLookup FromProblem(NuGetProblemDetailsResult problem) => new(null, problem);
 
     public static NuGetPackageMetadataLookup NotFound(string detail) =>
-        new() { Problem = NuGetProblemDetailsResult.NotFound(detail) };
+        new(null, NuGetProblemDetailsResult.NotFound(detail));
 }

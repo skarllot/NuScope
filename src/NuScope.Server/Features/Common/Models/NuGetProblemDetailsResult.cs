@@ -10,12 +10,21 @@ public sealed record NuGetProblemDetailsResult : NuGetToolResult
 
     public required string Detail { get; init; }
 
-    public static NuGetProblemDetailsResult NotFound(string detail) =>
+    public static NuGetProblemDetailsResult Problem(string type, string title, int status, string detail) =>
         new()
         {
-            Type = ProblemTypes.NotFound,
-            Title = "Not Found",
-            Status = 404,
+            Type = type,
+            Title = title,
+            Status = status,
             Detail = detail,
         };
+
+    public static NuGetProblemDetailsResult Forbidden(string detail) =>
+        Problem(ProblemTypes.Forbidden, "Forbidden", 403, detail);
+
+    public static NuGetProblemDetailsResult InternalServerError(string detail) =>
+        Problem(ProblemTypes.InternalServerError, "Internal Server Error", 500, detail);
+
+    public static NuGetProblemDetailsResult NotFound(string detail) =>
+        Problem(ProblemTypes.NotFound, "Not Found", 404, detail);
 }
