@@ -14,6 +14,7 @@ public sealed class NuGetPackageMetadataParserTests
             <package>
               <metadata>
                 <id>Package</id>
+                <version>1.0.0</version>
                 <dependencies>
                   <dependency id="First.Dependency" version="1.0.0" />
                   <dependency id="Second.Dependency" version="[2.0.0, )" exclude="Compile" />
@@ -46,6 +47,7 @@ public sealed class NuGetPackageMetadataParserTests
             <package>
               <metadata>
                 <id>Package</id>
+                <version>1.0.0</version>
               </metadata>
             </package>
             """
@@ -66,6 +68,7 @@ public sealed class NuGetPackageMetadataParserTests
             <package>
               <metadata>
                 <id>Package</id>
+                <version>1.0.0</version>
                 <repository url="https://github.com/example/repo" />
               </metadata>
             </package>
@@ -108,6 +111,7 @@ public sealed class NuGetPackageMetadataParserTests
             <package>
               <metadata>
                 <id>Package</id>
+                <version>1.0.0</version>
                 <license type="file">LICENSE.txt</license>
                 <repository type="git" url="https://github.com/example/repo" branch="main" commit="abcdef" />
                 <requireLicenseAcceptance>true</requireLicenseAcceptance>
