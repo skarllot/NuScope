@@ -42,6 +42,8 @@ public sealed class NuGetMetadataResultTests
     {
         var metadata = new NuGetPackageMetadata
         {
+            Id = "Package",
+            Version = "1.0.0",
             DependencyGroups =
             [
                 new NuGetDependencyGroup

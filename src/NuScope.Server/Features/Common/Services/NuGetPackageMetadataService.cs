@@ -1,46 +1,94 @@
-using System.Globalization;
 using System.IO.Abstractions;
 using Raiqub.NuSpec.Features.Common.Models;
 
 namespace Raiqub.NuSpec.Features.Common.Services;
 
-public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPackageMetadataParser parser)
-    : INuGetPackageMetadataService
+public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
 {
+    private readonly IFileSystem fileSystem;
+    private readonly INuGetPackageMetadataParser parser;
+    private readonly INuGetRemotePackageMetadataClient remoteMetadataClient;
+
+    public NuGetPackageMetadataService(
+        IFileSystem fileSystem,
+        INuGetPackageMetadataParser parser,
+        INuGetRemotePackageMetadataClient remoteMetadataClient
+    )
+    {
+        this.fileSystem = fileSystem;
+        this.parser = parser;
+        this.remoteMetadataClient = remoteMetadataClient;
+    }
+
+    public NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPackageMetadataParser parser)
+        : this(fileSystem, parser, NoOpRemotePackageMetadataClient.Instance) { }
+
     public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
 
-        var resolvedVersion = string.IsNullOrWhiteSpace(version) ? GetLatestVersion(packageName) : version;
-        if (resolvedVersion is null)
+        var localLookup = GetLocalNuGetPackageMetadata(packageName, version);
+        if (!localLookup.ShouldFallback)
         {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' was not found in the local NuGet cache."
-            );
+            return localLookup.Lookup;
         }
 
-        var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
-        if (!fileSystem.Directory.Exists(packageDirectory))
-        {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
-            );
-        }
+        var remoteLookup = remoteMetadataClient.GetNuGetPackageMetadata(packageName, version);
+        return remoteLookup.Metadata is not null || remoteLookup.Problem is not null
+            ? remoteLookup
+            : localLookup.Lookup;
+    }
+
+    private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string? version)
+    {
+        var resolvedVersion = version;
 
         try
         {
+            if (string.IsNullOrWhiteSpace(resolvedVersion))
+            {
+                resolvedVersion = GetLatestVersion(packageName);
+            }
+
+            if (resolvedVersion is null)
+            {
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' was not found in the local NuGet cache."
+                    ),
+                    ShouldFallback: true
+                );
+            }
+
+            var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
+            if (!fileSystem.Directory.Exists(packageDirectory))
+            {
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
+                    ),
+                    ShouldFallback: true
+                );
+            }
+
             var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
             if (nuspecPaths.Length == 0)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
             if (nuspecPaths.Length > 1)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
@@ -50,27 +98,39 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
             var metadata = parser.Parse(stream);
             if (metadata is null)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
-            return NuGetPackageMetadataLookup.Found(metadata);
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.Found(metadata),
+                ShouldFallback: false
+            );
         }
         catch (UnauthorizedAccessException)
         {
-            return NuGetPackageMetadataLookup.FromProblem(
-                NuGetProblemDetailsResult.Forbidden(
-                    $"Access to package '{packageName}' version '{resolvedVersion}' in the local NuGet cache was denied."
-                )
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.FromProblem(
+                    NuGetProblemDetailsResult.Forbidden(
+                        $"Access to {DescribeLocalPackageLookup(packageName, resolvedVersion)} in the local NuGet cache was denied."
+                    )
+                ),
+                ShouldFallback: false
             );
         }
         catch (IOException)
         {
-            return NuGetPackageMetadataLookup.FromProblem(
-                NuGetProblemDetailsResult.InternalServerError(
-                    $"An I/O error occurred while reading package '{packageName}' version '{resolvedVersion}' from the local NuGet cache."
-                )
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.FromProblem(
+                    NuGetProblemDetailsResult.InternalServerError(
+                        $"An I/O error occurred while reading {DescribeLocalPackageLookup(packageName, resolvedVersion)} from the local NuGet cache."
+                    )
+                ),
+                ShouldFallback: false
             );
         }
     }
@@ -87,7 +147,7 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
             .Directory.EnumerateDirectories(packageRootDirectory)
             .Select(fileSystem.Path.GetFileName)
             .OfType<string>()
-            .Select(version => new { Version = version, Parsed = PackageVersion.TryParse(version) })
+            .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
             .Where(version => version.Parsed is not null)
             .OrderByDescending(version => version.Parsed)
             .FirstOrDefault()
@@ -105,99 +165,28 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
         return fileSystem.Path.Combine(userProfile, ".nuget", "packages", packageName.ToLowerInvariant());
     }
 
-    private sealed record PackageVersion(int[] Release, string? Prerelease) : IComparable<PackageVersion>
+    private static string DescribeLocalPackageLookup(string packageName, string? resolvedVersion)
     {
-        public static PackageVersion? TryParse(string version)
+        return resolvedVersion is null
+            ? $"package '{packageName}' while resolving the latest available version"
+            : $"package '{packageName}' version '{resolvedVersion}'";
+    }
+
+    private sealed record LocalNuGetPackageMetadataLookup(NuGetPackageMetadataLookup Lookup, bool ShouldFallback);
+
+    private sealed class NoOpRemotePackageMetadataClient : INuGetRemotePackageMetadataClient
+    {
+        public static readonly NoOpRemotePackageMetadataClient Instance = new();
+
+        public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
         {
-            var versionWithoutMetadata = version.Split('+', 2)[0];
-            var parts = versionWithoutMetadata.Split('-', 2);
-            var release = parts[0]
-                .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(part => int.TryParse(part, out var parsed) ? parsed : (int?)null)
-                .ToArray();
-
-            return release.Length == 0 || release.Any(part => part is null)
-                ? null
-                : new PackageVersion(release.Select(part => part!.Value).ToArray(), parts.Length > 1 ? parts[1] : null);
+            return string.IsNullOrWhiteSpace(version)
+                ? NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' was not found in the local NuGet cache."
+                )
+                : NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' version '{version}' was not found in the local NuGet cache."
+                );
         }
-
-        public int CompareTo(PackageVersion? other)
-        {
-            if (other is null)
-            {
-                return 1;
-            }
-
-            var releaseLength = Math.Max(Release.Length, other.Release.Length);
-            for (var index = 0; index < releaseLength; index++)
-            {
-                var comparison = GetReleasePart(index).CompareTo(other.GetReleasePart(index));
-                if (comparison != 0)
-                {
-                    return comparison;
-                }
-            }
-
-            return ComparePrerelease(other);
-        }
-
-        private int ComparePrerelease(PackageVersion other)
-        {
-            return (Prerelease, other.Prerelease) switch
-            {
-                (null, null) => 0,
-                (null, _) => 1,
-                (_, null) => -1,
-                _ => ComparePrereleaseIdentifiers(Prerelease, other.Prerelease),
-            };
-        }
-
-        private int GetReleasePart(int index) => index < Release.Length ? Release[index] : 0;
-
-        private static int ComparePrereleaseIdentifiers(string prerelease, string otherPrerelease)
-        {
-            var identifiers = prerelease.Split('.');
-            var otherIdentifiers = otherPrerelease.Split('.');
-            var identifierLength = Math.Max(identifiers.Length, otherIdentifiers.Length);
-
-            for (var index = 0; index < identifierLength; index++)
-            {
-                if (index >= identifiers.Length)
-                {
-                    return -1;
-                }
-
-                if (index >= otherIdentifiers.Length)
-                {
-                    return 1;
-                }
-
-                var identifier = identifiers[index];
-                var otherIdentifier = otherIdentifiers[index];
-                var identifierIsNumeric = IsNumericIdentifier(identifier);
-                var otherIdentifierIsNumeric = IsNumericIdentifier(otherIdentifier);
-
-                var comparison = (identifierIsNumeric, otherIdentifierIsNumeric) switch
-                {
-                    (true, false) => -1,
-                    (false, true) => 1,
-                    _ => CultureInfo.InvariantCulture.CompareInfo.Compare(
-                        identifier,
-                        otherIdentifier,
-                        CompareOptions.IgnoreCase | CompareOptions.NumericOrdering
-                    ),
-                };
-
-                if (comparison != 0)
-                {
-                    return comparison;
-                }
-            }
-
-            return 0;
-        }
-
-        private static bool IsNumericIdentifier(string identifier) =>
-            identifier.Length > 0 && identifier.All(char.IsAsciiDigit);
     }
 }
