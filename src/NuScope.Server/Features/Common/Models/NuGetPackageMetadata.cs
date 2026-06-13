@@ -1,4 +1,4 @@
-namespace Raiqub.NuSpec.Features.Common.Models;
+namespace Raiqub.NuScope.Features.Common.Models;
 
 public sealed record NuGetPackageMetadata
 {

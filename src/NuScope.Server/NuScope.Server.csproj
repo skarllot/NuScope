@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Raiqub.NuSpec</RootNamespace>
-    <AssemblyName>Raiqub.NuSpec</AssemblyName>
-    <PackageId>Raiqub.NuSpec</PackageId>
+    <RootNamespace>Raiqub.NuScope</RootNamespace>
+    <AssemblyName>Raiqub.NuScope</AssemblyName>
+    <PackageId>Raiqub.NuScope</PackageId>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>nuscope</ToolCommandName>
     <PackageReadmeFile>README.md</PackageReadmeFile>

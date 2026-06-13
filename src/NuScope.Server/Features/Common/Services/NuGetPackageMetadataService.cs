@@ -1,7 +1,7 @@
 using System.IO.Abstractions;
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.Common.Services;
+namespace Raiqub.NuScope.Features.Common.Services;
 
 public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
 {

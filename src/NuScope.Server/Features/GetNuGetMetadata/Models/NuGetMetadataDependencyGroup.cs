@@ -1,6 +1,6 @@
-using CommonDependencyGroup = Raiqub.NuSpec.Features.Common.Models.NuGetDependencyGroup;
+using CommonDependencyGroup = Raiqub.NuScope.Features.Common.Models.NuGetDependencyGroup;
 
-namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+namespace Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 
 public sealed record NuGetMetadataDependencyGroup
 {

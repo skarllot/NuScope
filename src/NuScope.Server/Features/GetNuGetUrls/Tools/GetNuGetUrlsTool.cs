@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Models;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Services;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetUrls.Models;
+using Raiqub.NuScope.Features.GetNuGetUrls.Services;
 
-namespace Raiqub.NuSpec.Features.GetNuGetUrls.Tools;
+namespace Raiqub.NuScope.Features.GetNuGetUrls.Tools;
 
 [McpServerToolType]
 public sealed class GetNuGetUrlsTool(INuGetPackageMetadataService metadataService)

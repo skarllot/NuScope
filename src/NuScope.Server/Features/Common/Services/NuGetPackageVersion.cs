@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Raiqub.NuSpec.Features.Common.Services;
+namespace Raiqub.NuScope.Features.Common.Services;
 
 internal sealed record NuGetPackageVersion(int[] Release, string? Prerelease) : IComparable<NuGetPackageVersion>
 {

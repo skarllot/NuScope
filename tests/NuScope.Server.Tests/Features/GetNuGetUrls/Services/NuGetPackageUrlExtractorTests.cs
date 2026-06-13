@@ -1,8 +1,8 @@
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Services;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.GetNuGetUrls.Services;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.GetNuGetUrls.Services;
+namespace Raiqub.NuScope.Tests.Features.GetNuGetUrls.Services;
 
 public sealed class NuGetPackageUrlExtractorTests
 {

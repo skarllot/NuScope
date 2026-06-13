@@ -1,11 +1,11 @@
 using System.IO.Abstractions.TestingHelpers;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Tools;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Models;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.GetNuGetMetadata.Tools;
+namespace Raiqub.NuScope.Tests.Features.GetNuGetMetadata.Tools;
 
 public sealed class GetNuGetMetadataToolTests
 {

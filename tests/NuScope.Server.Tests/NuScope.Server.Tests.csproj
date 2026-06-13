@@ -2,7 +2,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>Raiqub.NuSpec.Tests</RootNamespace>
+    <RootNamespace>Raiqub.NuScope.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

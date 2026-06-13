@@ -2,9 +2,9 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Tools;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
+using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
 
 var builder = Host.CreateApplicationBuilder(args);
 

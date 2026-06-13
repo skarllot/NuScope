@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Tools;
+namespace Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 
 [McpServerToolType]
 public sealed class GetNuGetMetadataTool(INuGetPackageMetadataService metadataService)
