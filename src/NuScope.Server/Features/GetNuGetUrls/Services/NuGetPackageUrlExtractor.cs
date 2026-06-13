@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Models;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.GetNuGetUrls.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetUrls.Services;
+namespace Raiqub.NuScope.Features.GetNuGetUrls.Services;
 
 public static class NuGetPackageUrlExtractor
 {

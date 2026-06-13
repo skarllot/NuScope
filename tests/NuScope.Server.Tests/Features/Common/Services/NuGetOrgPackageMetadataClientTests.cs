@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.Common.Services;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Services;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.Common.Services;
+namespace Raiqub.NuScope.Tests.Features.Common.Services;
 
 public sealed class NuGetOrgPackageMetadataClientTests
 {

@@ -3,8 +3,8 @@
 [![Build status](https://github.com/skarllot/NuScope/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/skarllot/NuScope/actions)
 [![codecov](https://codecov.io/gh/skarllot/NuScope/branch/main/graph/badge.svg)](https://codecov.io/gh/skarllot/NuScope)
 [![GitHub license](https://img.shields.io/badge/license-Apache%202.0-blue.svg?style=flat-square)](LICENSE)
-[![Nuget](https://img.shields.io/nuget/v/Raiqub.NuSpec)](https://www.nuget.org/packages/Raiqub.NuSpec)
-[![Nuget](https://img.shields.io/nuget/dt/Raiqub.NuSpec?label=Nuget.org%20Downloads&style=flat-square&color=blue)](https://www.nuget.org/packages/Raiqub.NuSpec)
+[![Nuget](https://img.shields.io/nuget/v/Raiqub.NuScope)](https://www.nuget.org/packages/Raiqub.NuScope)
+[![Nuget](https://img.shields.io/nuget/dt/Raiqub.NuScope?label=Nuget.org%20Downloads&style=flat-square&color=blue)](https://www.nuget.org/packages/Raiqub.NuScope)
 
 MCP server for exploring NuGet packages, metadata, and source code.
 
@@ -14,7 +14,7 @@ NuScope runs as a stdio MCP server and can be started directly from NuGet with
 [`dnx`](https://learn.microsoft.com/dotnet/core/tools/dnx). `dnx` is included
 with the .NET 10 SDK.
 
-Use the NuGet package ID (`Raiqub.NuSpec`) in the command arguments:
+Use the NuGet package ID (`Raiqub.NuScope`) in the command arguments:
 
 ```json
 {
@@ -22,14 +22,14 @@ Use the NuGet package ID (`Raiqub.NuSpec`) in the command arguments:
     "nuscope": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["Raiqub.NuSpec", "--yes"]
+      "args": ["Raiqub.NuScope", "--yes"]
     }
   }
 }
 ```
 
 For prerelease versions, add `--prerelease`. To pin a version, use
-`Raiqub.NuSpec@x.y.z`.
+`Raiqub.NuScope@x.y.z`.
 
 ### Claude Desktop
 
@@ -40,7 +40,7 @@ Add NuScope to `claude_desktop_config.json`:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuSpec", "--yes"]
+      "args": ["Raiqub.NuScope", "--yes"]
     }
   }
 }
@@ -61,7 +61,7 @@ Add NuScope to `.vscode/mcp.json`:
     "nuscope": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["Raiqub.NuSpec", "--yes"]
+      "args": ["Raiqub.NuScope", "--yes"]
     }
   }
 }
@@ -76,7 +76,7 @@ Add NuScope to `.cursor/mcp.json`:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuSpec", "--yes"]
+      "args": ["Raiqub.NuScope", "--yes"]
     }
   }
 }
@@ -91,7 +91,7 @@ Use the standard MCP server configuration:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuSpec", "--yes"]
+      "args": ["Raiqub.NuScope", "--yes"]
     }
   }
 }

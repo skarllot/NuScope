@@ -479,7 +479,7 @@
           "xunit.v3.runner.common": "[3.2.2]"
         }
       },
-      "Raiqub.NuSpec": {
+      "Raiqub.NuScope": {
         "type": "Project",
         "dependencies": {
           "Microsoft.Extensions.Hosting": "[10.0.8, )",

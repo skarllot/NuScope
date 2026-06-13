@@ -1,8 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.Common.Services;
+namespace Raiqub.NuScope.Features.Common.Services;
 
 public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetPackageMetadataParser parser)
     : INuGetRemotePackageMetadataClient

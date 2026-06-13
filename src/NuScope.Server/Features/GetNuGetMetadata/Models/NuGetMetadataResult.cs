@@ -1,6 +1,6 @@
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+namespace Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 
 public sealed record NuGetMetadataResult : NuGetToolResult
 {

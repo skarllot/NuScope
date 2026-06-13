@@ -1,6 +1,6 @@
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetUrls.Models;
+namespace Raiqub.NuScope.Features.GetNuGetUrls.Models;
 
 public sealed record NuGetPackageUrlsResult : NuGetToolResult
 {

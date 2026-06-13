@@ -3,7 +3,7 @@
 ## Scope and shape
 - .NET SDK is pinned to `10.0.300` in `global.json`; `dnx` usage in docs assumes .NET 10.
 - The solution has only two projects: `src/NuScope.Server` and `tests/NuScope.Server.Tests`.
-- `src/NuScope.Server` is a stdio MCP server packaged as NuGet tool/package `Raiqub.NuSpec`; tool command is `nuscope`.
+- `src/NuScope.Server` is a stdio MCP server packaged as NuGet tool/package `Raiqub.NuScope`; tool command is `nuscope`.
 - Real runtime wiring is in `src/NuScope.Server/Program.cs`: generic host, console logs to stderr, stdio
   MCP transport, tools from `NuGetPackageMetadataTools`.
 

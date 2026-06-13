@@ -1,7 +1,7 @@
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.Common.Models;
+namespace Raiqub.NuScope.Tests.Features.Common.Models;
 
 public sealed class NuGetPackageMetadataLookupTests
 {
