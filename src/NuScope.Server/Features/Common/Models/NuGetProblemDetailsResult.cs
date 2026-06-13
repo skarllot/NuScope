@@ -27,4 +27,7 @@ public sealed record NuGetProblemDetailsResult : NuGetToolResult
 
     public static NuGetProblemDetailsResult NotFound(string detail) =>
         Problem(ProblemTypes.NotFound, "Not Found", 404, detail);
+
+    public static NuGetProblemDetailsResult ServiceUnavailable(string detail) =>
+        Problem(ProblemTypes.ServiceUnavailable, "Service Unavailable", 503, detail);
 }
