@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using Raiqub.NuSpec.Features.Common.Models;
 using Raiqub.NuSpec.Features.Common.Services;
@@ -12,13 +13,16 @@ public sealed class NuGetPackageMetadataServiceTests
     {
         var fileSystem = new MockFileSystem();
         var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient();
 
-        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata(
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
             "Missing.Package",
             "1.0.0"
         );
 
-        AssertNotFoundProblem(result, "was not found");
+        Assert.Equal(remoteClient.Result, result);
+        Assert.Equal("Missing.Package", remoteClient.PackageName);
+        Assert.Equal("1.0.0", remoteClient.Version);
         Assert.False(parser.WasCalled);
     }
 
@@ -116,6 +120,8 @@ public sealed class NuGetPackageMetadataServiceTests
     public void GetNuGetPackageMetadataIgnoresInvalidVersionDirectoriesWhenSelectingLatest()
     {
         var invalidVersionDirectory = GetPackageDirectory("Package.With.Metadata", "not-a-version");
+        var emptyReleaseVersionDirectory = GetPackageDirectory("Package.With.Metadata", "1..0");
+        var negativeReleaseVersionDirectory = GetPackageDirectory("Package.With.Metadata", "1.-1.0");
         var prereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta");
         var latestPackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
         var nuspecPath = Path.Combine(latestPackageDirectory, "package.with.metadata.nuspec");
@@ -124,6 +130,8 @@ public sealed class NuGetPackageMetadataServiceTests
             new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
         );
         fileSystem.AddDirectory(invalidVersionDirectory);
+        fileSystem.AddDirectory(emptyReleaseVersionDirectory);
+        fileSystem.AddDirectory(negativeReleaseVersionDirectory);
         fileSystem.AddDirectory(prereleasePackageDirectory);
         fileSystem.AddDirectory(latestPackageDirectory);
         var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
@@ -135,6 +143,37 @@ public sealed class NuGetPackageMetadataServiceTests
         var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
         Assert.Equal("2.0.0", success.Version);
         Assert.Equal(expectedMetadata.Id, success.Id);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsInternalServerErrorWhenResolvingLatestVersionFails()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Metadata");
+        var innerFileSystem = new MockFileSystem();
+        innerFileSystem.AddDirectory(packageRootDirectory);
+        var fileSystem = new ThrowingOnEnumerateFileSystem(
+            innerFileSystem,
+            packageRootDirectory,
+            new IOException("Read failed.")
+        );
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            NuGetPackageMetadataLookup.Found(new NuGetPackageMetadata { Id = "Ignored", Version = "9.9.9" })
+        );
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        AssertProblem(
+            result,
+            ProblemTypes.InternalServerError,
+            "Internal Server Error",
+            500,
+            "resolving the latest available version"
+        );
+        Assert.Null(remoteClient.PackageName);
+        Assert.False(parser.WasCalled);
     }
 
     [Fact]
@@ -226,11 +265,82 @@ public sealed class NuGetPackageMetadataServiceTests
     {
         var fileSystem = new MockFileSystem();
         var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteClient = new RecordingRemotePackageMetadataClient();
 
-        var result = new NuGetPackageMetadataService(fileSystem, parser).GetNuGetPackageMetadata("Missing.Package");
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Missing.Package"
+        );
 
-        AssertNotFoundProblem(result, "was not found");
+        Assert.Equal(remoteClient.Result, result);
+        Assert.Equal("Missing.Package", remoteClient.PackageName);
+        Assert.Null(remoteClient.Version);
         Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataFallsBackToRemoteWhenRequestedVersionDirectoryIsMissing()
+    {
+        var fileSystem = new MockFileSystem();
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "1.0.0" };
+        var remoteClient = new RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup.Found(remoteMetadata));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata",
+            "1.0.0"
+        );
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal(remoteMetadata.Id, metadata.Id);
+        Assert.Equal(remoteMetadata.Version, metadata.Version);
+        Assert.Equal("Package.With.Metadata", remoteClient.PackageName);
+        Assert.Equal("1.0.0", remoteClient.Version);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataFallsBackToRemoteWhenNoLocalVersionCanBeResolved()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Metadata");
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddDirectory(packageRootDirectory);
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "not-a-version"));
+        var parser = new RecordingNuGetPackageMetadataParser();
+        var remoteMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "3.0.0" };
+        var remoteClient = new RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup.Found(remoteMetadata));
+
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        var metadata = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("3.0.0", metadata.Version);
+        Assert.Equal("Package.With.Metadata", remoteClient.PackageName);
+        Assert.Null(remoteClient.Version);
+        Assert.False(parser.WasCalled);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataDoesNotFallBackWhenLocalNuspecIsMalformed()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Malformed.Nuspec", "1.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.malformed.nuspec");
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            NuGetPackageMetadataLookup.Found(new NuGetPackageMetadata { Id = "Ignored", Version = "9.9.9" })
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new NuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageMetadata("Package.With.Malformed.Nuspec", "1.0.0");
+
+        AssertNotFoundProblem(result, "invalid or malformed .nuspec file");
+        Assert.Null(remoteClient.PackageName);
     }
 
     [Fact]
@@ -359,6 +469,12 @@ public sealed class NuGetPackageMetadataServiceTests
         );
     }
 
+    private static string GetPackageRootDirectory(string packageName)
+    {
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return Path.Combine(userProfile, ".nuget", "packages", packageName.ToLowerInvariant());
+    }
+
     private sealed class RecordingNuGetPackageMetadataParser(NuGetPackageMetadata? result = null)
         : INuGetPackageMetadataParser
     {
@@ -374,5 +490,73 @@ public sealed class NuGetPackageMetadataServiceTests
     private sealed class ThrowingNuGetPackageMetadataParser(Exception exception) : INuGetPackageMetadataParser
     {
         public NuGetPackageMetadata? Parse(Stream stream) => throw exception;
+    }
+
+    private sealed class RecordingRemotePackageMetadataClient(NuGetPackageMetadataLookup? result = null)
+        : INuGetRemotePackageMetadataClient
+    {
+        public string? PackageName { get; private set; }
+
+        public string? Version { get; private set; }
+
+        public NuGetPackageMetadataLookup Result { get; } =
+            result ?? NuGetPackageMetadataLookup.NotFound("Package was not found on nuget.org.");
+
+        public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
+        {
+            PackageName = packageName;
+            Version = version;
+            return Result;
+        }
+    }
+
+    private sealed class ThrowingOnEnumerateFileSystem : FileSystemBase
+    {
+        private readonly IFileSystem innerFileSystem;
+
+        public ThrowingOnEnumerateFileSystem(IFileSystem innerFileSystem, string pathToThrow, IOException exception)
+        {
+            this.innerFileSystem = innerFileSystem;
+            Directory = new ThrowingOnEnumerateMockDirectory(
+                (IMockFileDataAccessor)innerFileSystem,
+                pathToThrow,
+                exception
+            );
+        }
+
+        public override IDirectory Directory { get; }
+
+        public override IFile File => innerFileSystem.File;
+
+        public override IFileInfoFactory FileInfo => innerFileSystem.FileInfo;
+
+        public override IFileVersionInfoFactory FileVersionInfo => innerFileSystem.FileVersionInfo;
+
+        public override IFileStreamFactory FileStream => innerFileSystem.FileStream;
+
+        public override IPath Path => innerFileSystem.Path;
+
+        public override IDirectoryInfoFactory DirectoryInfo => innerFileSystem.DirectoryInfo;
+
+        public override IDriveInfoFactory DriveInfo => innerFileSystem.DriveInfo;
+
+        public override IFileSystemWatcherFactory FileSystemWatcher => innerFileSystem.FileSystemWatcher;
+    }
+
+    private sealed class ThrowingOnEnumerateMockDirectory(
+        IMockFileDataAccessor fileDataAccessor,
+        string pathToThrow,
+        IOException exception
+    ) : MockDirectory(fileDataAccessor, Directory.GetCurrentDirectory())
+    {
+        public override IEnumerable<string> EnumerateDirectories(string path)
+        {
+            if (string.Equals(path, pathToThrow, StringComparison.OrdinalIgnoreCase))
+            {
+                throw exception;
+            }
+
+            return base.EnumerateDirectories(path);
+        }
     }
 }

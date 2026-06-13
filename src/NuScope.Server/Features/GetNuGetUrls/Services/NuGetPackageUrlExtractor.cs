@@ -13,11 +13,13 @@ public static class NuGetPackageUrlExtractor
 
     public static NuGetPackageUrlsResult Extract(NuGetPackageMetadata metadata)
     {
+        var id = metadata.Id;
+        var version = metadata.Version;
         var projectUrl = NormalizeUrl(metadata.ProjectUrl);
         var repositoryUrl = NormalizeUrl(metadata.Repository?.Url);
         var otherUrls = GetOtherUrls(metadata, projectUrl, repositoryUrl);
 
-        return NuGetPackageUrlsResult.Found(projectUrl, repositoryUrl, otherUrls);
+        return NuGetPackageUrlsResult.Found(id, version, projectUrl, repositoryUrl, otherUrls);
     }
 
     private static NuGetPackageMetadataUrl[] GetOtherUrls(

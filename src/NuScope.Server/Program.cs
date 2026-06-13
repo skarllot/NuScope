@@ -14,7 +14,9 @@ builder.Logging.AddConsole(options =>
 });
 
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
+builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<INuGetPackageMetadataParser, NuGetPackageMetadataParser>();
+builder.Services.AddSingleton<INuGetRemotePackageMetadataClient, NuGetOrgPackageMetadataClient>();
 builder.Services.AddSingleton<INuGetPackageMetadataService, NuGetPackageMetadataService>();
 
 builder

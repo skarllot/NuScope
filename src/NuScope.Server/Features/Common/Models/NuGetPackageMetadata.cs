@@ -2,9 +2,9 @@ namespace Raiqub.NuSpec.Features.Common.Models;
 
 public sealed record NuGetPackageMetadata
 {
-    public string? Id { get; init; }
+    public required string Id { get; init; }
 
-    public string? Version { get; init; }
+    public required string Version { get; init; }
 
     public string? Title { get; init; }
 
