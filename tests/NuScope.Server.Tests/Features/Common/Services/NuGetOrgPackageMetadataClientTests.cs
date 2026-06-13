@@ -9,6 +9,18 @@ namespace Raiqub.NuSpec.Tests.Features.Common.Services;
 
 public sealed class NuGetOrgPackageMetadataClientTests
 {
+    private const string ServiceIndexJson =
+        """
+        {
+          "resources": [
+            {
+              "@id": "https://api.nuget.org/v3-flatcontainer/",
+              "@type": "PackageBaseAddress/3.0.0"
+            }
+          ]
+        }
+        """;
+
     [Fact]
     public void GetNuGetPackageMetadataReturnsLatestRemoteMetadataWhenVersionIsNotProvided()
     {
@@ -16,18 +28,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
         {
             return request.RequestUri!.AbsoluteUri switch
             {
-                "https://api.nuget.org/v3/index.json" => JsonResponse(
-                    """
-                    {
-                      "resources": [
-                        {
-                          "@id": "https://api.nuget.org/v3-flatcontainer/",
-                          "@type": "PackageBaseAddress/3.0.0"
-                        }
-                      ]
-                    }
-                    """
-                ),
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
                 "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
                     """
                     {
@@ -68,18 +69,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
 
             return request.RequestUri!.AbsoluteUri switch
             {
-                "https://api.nuget.org/v3/index.json" => JsonResponse(
-                    """
-                    {
-                      "resources": [
-                        {
-                          "@id": "https://api.nuget.org/v3-flatcontainer/",
-                          "@type": "PackageBaseAddress/3.0.0"
-                        }
-                      ]
-                    }
-                    """
-                ),
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
                 "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
                     """
                     {
@@ -121,18 +111,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
         {
             return request.RequestUri!.AbsoluteUri switch
             {
-                "https://api.nuget.org/v3/index.json" => JsonResponse(
-                    """
-                    {
-                      "resources": [
-                        {
-                          "@id": "https://api.nuget.org/v3-flatcontainer/",
-                          "@type": "PackageBaseAddress/3.0.0"
-                        }
-                      ]
-                    }
-                    """
-                ),
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
                 "https://api.nuget.org/v3-flatcontainer/missing.package/index.json" => JsonResponse(
                     """
                     {
@@ -183,18 +162,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
         {
             return request.RequestUri!.AbsoluteUri switch
             {
-                "https://api.nuget.org/v3/index.json" => JsonResponse(
-                    """
-                    {
-                      "resources": [
-                        {
-                          "@id": "https://api.nuget.org/v3-flatcontainer/",
-                          "@type": "PackageBaseAddress/3.0.0"
-                        }
-                      ]
-                    }
-                    """
-                ),
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
                 "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
                     """
                     {
@@ -232,18 +200,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
         {
             return request.RequestUri!.AbsoluteUri switch
             {
-                "https://api.nuget.org/v3/index.json" => JsonResponse(
-                    """
-                    {
-                      "resources": [
-                        {
-                          "@id": "https://api.nuget.org/v3-flatcontainer/",
-                          "@type": "PackageBaseAddress/3.0.0"
-                        }
-                      ]
-                    }
-                    """
-                ),
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
                 "https://api.nuget.org/v3-flatcontainer/prerelease.only/index.json" => JsonResponse(
                     """
                     {
