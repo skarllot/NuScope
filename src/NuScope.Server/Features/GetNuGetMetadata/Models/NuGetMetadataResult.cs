@@ -4,9 +4,9 @@ namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
 
 public sealed record NuGetMetadataResult : NuGetToolResult
 {
-    public string? Id { get; init; }
+    public required string Id { get; init; }
 
-    public string? Version { get; init; }
+    public required string Version { get; init; }
 
     public string? Title { get; init; }
 
