@@ -9,8 +9,7 @@ namespace Raiqub.NuSpec.Tests.Features.Common.Services;
 
 public sealed class NuGetOrgPackageMetadataClientTests
 {
-    private const string ServiceIndexJson =
-        """
+    private const string ServiceIndexJson = """
         {
           "resources": [
             {
@@ -141,6 +140,212 @@ public sealed class NuGetOrgPackageMetadataClientTests
         AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "could not be reached");
     }
 
+    [Theory]
+    [InlineData("""{ "resources": [] }""")]
+    [InlineData("""{ "resources": {} }""")]
+    [InlineData("""{ "resources": [{ "@type": "PackageBaseAddress/3.0.0", "@id": "" }] }""")]
+    [InlineData(
+        """{ "resources": [{ "@type": "OtherResource/1.0.0", "@id": "https://api.nuget.org/v3-flatcontainer/" }] }"""
+    )]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenPackageBaseAddressIsUnavailable(
+        string serviceIndexJson
+    )
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            request.RequestUri!.AbsoluteUri == "https://api.nuget.org/v3/index.json"
+                ? JsonResponse(serviceIndexJson)
+                : throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}")
+        );
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Any.Package");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "did not advertise a package content endpoint");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenPackageIsMissingFromVersionsIndex()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/missing.package/index.json" => new HttpResponseMessage(
+                    HttpStatusCode.NotFound
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Missing.Package");
+
+        AssertProblem(result, ProblemTypes.NotFound, 404, "Package 'Missing.Package' was not found on nuget.org");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenVersionsRequestFails()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/failing.package/index.json" => new HttpResponseMessage(
+                    HttpStatusCode.BadGateway
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Failing.Package");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "returned 502 while looking up package");
+    }
+
+    [Theory]
+    [InlineData("""{}""")]
+    [InlineData("""{ "versions": {} }""")]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableForInvalidVersionsPayload(string versionsJson)
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(versionsJson),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "invalid versions response");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenNoComparableVersionExists()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": [null, "not-a-version", "1..0"]
+                    }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.NotFound, 404, "Package 'Package.With.Case' was not found on nuget.org");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenNuspecIsMissingForResolvedVersion()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["1.0.0"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/1.0.0/package.with.case.nuspec" =>
+                    new HttpResponseMessage(HttpStatusCode.NotFound),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.NotFound, 404, "version '1.0.0' was not found on nuget.org");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenNuspecRequestFails()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["1.0.0"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/1.0.0/package.with.case.nuspec" =>
+                    new HttpResponseMessage(HttpStatusCode.BadGateway),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "returned 502 while reading package");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenParsedMetadataIsInvalid()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["1.0.0"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/1.0.0/package.with.case.nuspec" =>
+                    XmlResponse(
+                        """
+                        <package>
+                          <metadata />
+                        </package>
+                        """
+                    ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "returned invalid metadata");
+    }
+
     [Fact]
     public void GetNuGetPackageMetadataRejectsAbsolutePackageIdentifiers()
     {
@@ -153,6 +358,7 @@ public sealed class NuGetOrgPackageMetadataClientTests
         Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("/Newtonsoft.Json"));
         Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("\\Newtonsoft.Json"));
         Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("Newtonsoft/Json"));
+        Assert.Throws<ArgumentException>(() => client.GetNuGetPackageMetadata("   "));
     }
 
     [Fact]
@@ -231,6 +437,77 @@ public sealed class NuGetOrgPackageMetadataClientTests
         Assert.Equal("2.0.1-rc1", metadata.Version);
     }
 
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenTransportThrowsHttpRequestException()
+    {
+        var handler = new StubHttpMessageHandler(_ => throw new HttpRequestException("Name or service not known."));
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Any.Package");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "could not be reached");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenVersionsJsonIsMalformed()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse("{"),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "returned invalid JSON");
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsServiceUnavailableWhenReadingNuspecFails()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["1.0.0"]
+                    }
+                    """
+                ),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/1.0.0/package.with.case.nuspec" =>
+                    XmlResponse(
+                        """
+                        <package>
+                          <metadata>
+                            <id>Package.With.Case</id>
+                            <version>1.0.0</version>
+                          </metadata>
+                        </package>
+                        """
+                    ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(
+            new HttpClient(handler),
+            new ThrowingParser(new IOException("Stream read failed."))
+        );
+
+        var result = client.GetNuGetPackageMetadata("Package.With.Case");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "network I/O error occurred");
+    }
+
     private static HttpResponseMessage JsonResponse(string content)
     {
         return new HttpResponseMessage(HttpStatusCode.OK)
@@ -271,5 +548,10 @@ public sealed class NuGetOrgPackageMetadataClientTests
         {
             return Task.FromResult(responder(request));
         }
+    }
+
+    private sealed class ThrowingParser(Exception exception) : INuGetPackageMetadataParser
+    {
+        public NuGetPackageMetadata? Parse(Stream stream) => throw exception;
     }
 }

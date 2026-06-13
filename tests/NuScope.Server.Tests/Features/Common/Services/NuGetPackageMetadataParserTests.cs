@@ -158,5 +158,29 @@ public sealed class NuGetPackageMetadataParserTests
         Assert.Null(metadata);
     }
 
+    [Fact]
+    public void ParseReturnsNoDependencyGroupsWhenDependenciesElementIsEmpty()
+    {
+        using var stream = CreateStream(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <package>
+              <metadata>
+                <id>Package</id>
+                <version>1.0.0</version>
+                <requireLicenseAcceptance>not-a-bool</requireLicenseAcceptance>
+                <dependencies />
+              </metadata>
+            </package>
+            """
+        );
+
+        var metadata = new NuGetPackageMetadataParser().Parse(stream);
+
+        Assert.NotNull(metadata);
+        Assert.False(metadata!.RequireLicenseAcceptance);
+        Assert.Empty(metadata.DependencyGroups);
+    }
+
     private static MemoryStream CreateStream(string xml) => new(System.Text.Encoding.UTF8.GetBytes(xml));
 }
