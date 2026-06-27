@@ -36,3 +36,26 @@ public sealed class NuGetPackageMetadataLookupTests
         Assert.Same(problem, result.Problem);
     }
 }
+
+public sealed class NuGetPackageVersionsLookupTests
+{
+    [Fact]
+    public void FoundSetsOnlyVersions()
+    {
+        string[] versions = ["2.0.0", "1.0.0"];
+
+        var result = NuGetPackageVersionsLookup.Found(versions);
+
+        Assert.Same(versions, result.Versions);
+        Assert.Null(result.Problem);
+    }
+
+    [Fact]
+    public void NotFoundSetsOnlyProblem()
+    {
+        var result = NuGetPackageVersionsLookup.NotFound("Package versions were not found.");
+
+        Assert.Null(result.Versions);
+        Assert.NotNull(result.Problem);
+    }
+}

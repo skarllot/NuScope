@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Features.GetNuGetVersions.Tools;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -23,7 +24,8 @@ builder
     .Services.AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<GetNuGetMetadataTool>()
-    .WithTools<GetNuGetUrlsTool>();
+    .WithTools<GetNuGetUrlsTool>()
+    .WithTools<GetNuGetVersionsTool>();
 
 await builder.Build().RunAsync();
 

@@ -122,6 +122,118 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
         }
     }
 
+    public NuGetPackageVersionsLookup GetNuGetPackageVersions(
+        string packageName,
+        int? minimumMajor = null,
+        bool includePreRelease = false,
+        int? maxItems = null
+    )
+    {
+        if (minimumMajor < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(minimumMajor),
+                minimumMajor,
+                "Minimum major must be non-negative."
+            );
+        }
+
+        if (maxItems < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxItems), maxItems, "Maximum items must be positive.");
+        }
+
+        var packageId = NormalizePackageId(packageName);
+
+        try
+        {
+            var packageBaseAddress = GetPackageBaseAddress();
+            if (packageBaseAddress is null)
+            {
+                return NuGetPackageVersionsLookup.FromProblem(
+                    NuGetProblemDetailsResult.ServiceUnavailable(
+                        "nuget.org did not advertise a package content endpoint."
+                    )
+                );
+            }
+
+            using var versionsResponse = Send(packageBaseAddress, $"{packageId}/index.json");
+            if (versionsResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                return NuGetPackageVersionsLookup.NotFound($"Package '{packageName}' was not found on nuget.org.");
+            }
+
+            if (!versionsResponse.IsSuccessStatusCode)
+            {
+                return NuGetPackageVersionsLookup.FromProblem(
+                    NuGetProblemDetailsResult.ServiceUnavailable(
+                        $"nuget.org returned {(int)versionsResponse.StatusCode} while looking up package '{packageName}' versions."
+                    )
+                );
+            }
+
+            using var versionsStream = versionsResponse.Content.ReadAsStream();
+            using var versionsDocument = JsonDocument.Parse(versionsStream);
+            var versions = GetVersions(versionsDocument.RootElement);
+
+            if (versions is null)
+            {
+                return NuGetPackageVersionsLookup.FromProblem(
+                    NuGetProblemDetailsResult.ServiceUnavailable(
+                        $"nuget.org returned an invalid versions response for package '{packageName}'."
+                    )
+                );
+            }
+
+            var validVersions = versions
+                .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
+                .Where(version =>
+                    version.Parsed is not null
+                    && (includePreRelease || version.Parsed.Prerelease is null)
+                    && (minimumMajor is null || version.Parsed.Release[0] >= minimumMajor.Value)
+                )
+                .GroupBy(version => version.Version, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First())
+                .OrderByDescending(version => version.Parsed)
+                .Select(version => version.Version);
+
+            if (maxItems is not null)
+            {
+                validVersions = validVersions.Take(maxItems.Value);
+            }
+
+            var limitedVersions = validVersions.ToArray();
+
+            return limitedVersions.Length == 0
+                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                : NuGetPackageVersionsLookup.Found(limitedVersions);
+        }
+        catch (HttpRequestException exception)
+        {
+            return NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable(
+                    $"nuget.org could not be reached while looking up package '{packageName}' versions: {exception.Message}"
+                )
+            );
+        }
+        catch (IOException exception)
+        {
+            return NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable(
+                    $"A network I/O error occurred while reading package '{packageName}' versions from nuget.org: {exception.Message}"
+                )
+            );
+        }
+        catch (JsonException exception)
+        {
+            return NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable(
+                    $"nuget.org returned invalid JSON while looking up package '{packageName}' versions: {exception.Message}"
+                )
+            );
+        }
+    }
+
     private static string NormalizePackageId(string packageName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
@@ -206,7 +318,12 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             return null;
         }
 
-        return versionsElement.EnumerateArray().Select(version => version.GetString()).OfType<string>().ToArray();
+        return versionsElement
+            .EnumerateArray()
+            .Where(version => version.ValueKind == JsonValueKind.String)
+            .Select(version => version.GetString())
+            .OfType<string>()
+            .ToArray();
     }
 
     private static string? ResolveVersion(IReadOnlyList<string> versions, string? requestedVersion)
@@ -224,5 +341,12 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             .OrderByDescending(version => version.Parsed)
             .FirstOrDefault()
             ?.Version;
+    }
+
+    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor)
+    {
+        return minimumMajor is null
+            ? $"Package '{packageName}' versions were not found on nuget.org."
+            : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} were not found on nuget.org.";
     }
 }

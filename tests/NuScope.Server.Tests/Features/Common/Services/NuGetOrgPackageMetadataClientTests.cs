@@ -508,6 +508,181 @@ public sealed class NuGetOrgPackageMetadataClientTests
         AssertProblem(result, ProblemTypes.ServiceUnavailable, 503, "network I/O error occurred");
     }
 
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsStableRemoteVersionsWithoutFetchingNuspecs()
+    {
+        var seenUris = new List<string>();
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            seenUris.Add(request.RequestUri!.AbsoluteUri);
+
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["12.0.1", "13.0.3-beta.1", "13.0.3", "not-a-version"]
+                    }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Newtonsoft.Json", minimumMajor: 13);
+
+        Assert.Null(result.Problem);
+        Assert.Equal(["13.0.3"], result.Versions);
+        Assert.DoesNotContain(seenUris, uri => uri.EndsWith(".nuspec", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsIncludesPrereleaseRemoteVersionsWhenRequested()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["13.0.3-beta.1", "13.0.3"]
+                    }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Newtonsoft.Json", minimumMajor: 13, includePreRelease: true);
+
+        Assert.Null(result.Problem);
+        Assert.Equal(["13.0.3", "13.0.3-beta.1"], result.Versions);
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsLimitsRemoteVersionsAfterSorting()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    {
+                      "versions": ["11.0.1", "12.0.1", "13.0.3"]
+                    }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Newtonsoft.Json", maxItems: 2);
+
+        Assert.Null(result.Problem);
+        Assert.Equal(["13.0.3", "12.0.1"], result.Versions);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void GetNuGetPackageVersionsRejectsNonPositiveMaxItems(int maxItems)
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+            throw new Xunit.Sdk.XunitException("Request should not be sent.")
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            client.GetNuGetPackageVersions("Any.Package", maxItems: maxItems)
+        );
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsNotFoundWhenPackageIsMissing()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/missing.package/index.json" => new HttpResponseMessage(
+                    HttpStatusCode.NotFound
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Missing.Package");
+
+        AssertVersionsProblem(result, ProblemTypes.NotFound, 404, "was not found on nuget.org");
+    }
+
+    [Theory]
+    [InlineData("""{}""")]
+    [InlineData("""{ "versions": {} }""")]
+    public void GetNuGetPackageVersionsReturnsServiceUnavailableForInvalidVersionsPayload(string versionsJson)
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse(versionsJson),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Package.With.Case");
+
+        AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "invalid versions response");
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsServiceUnavailableWhenVersionsJsonIsMalformed()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => JsonResponse("{"),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Package.With.Case");
+
+        AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "returned invalid JSON");
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsServiceUnavailableWhenTransportThrowsHttpRequestException()
+    {
+        var handler = new StubHttpMessageHandler(_ => throw new HttpRequestException("Name or service not known."));
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Any.Package");
+
+        AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "could not be reached");
+    }
+
     private static HttpResponseMessage JsonResponse(string content)
     {
         return new HttpResponseMessage(HttpStatusCode.OK)
@@ -532,6 +707,20 @@ public sealed class NuGetOrgPackageMetadataClientTests
     )
     {
         Assert.Null(result.Metadata);
+        var problem = Assert.IsType<NuGetProblemDetailsResult>(result.Problem);
+        Assert.Equal(expectedType, problem.Type);
+        Assert.Equal(expectedStatus, problem.Status);
+        Assert.Contains(expectedDetail, problem.Detail);
+    }
+
+    private static void AssertVersionsProblem(
+        NuGetPackageVersionsLookup result,
+        string expectedType,
+        int expectedStatus,
+        string expectedDetail
+    )
+    {
+        Assert.Null(result.Versions);
         var problem = Assert.IsType<NuGetProblemDetailsResult>(result.Problem);
         Assert.Equal(expectedType, problem.Type);
         Assert.Equal(expectedStatus, problem.Status);
