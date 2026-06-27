@@ -36,3 +36,84 @@ public sealed class NuGetPackageMetadataLookupTests
         Assert.Same(problem, result.Problem);
     }
 }
+
+public sealed class NuGetPackageVersionsLookupTests
+{
+    [Fact]
+    public void FoundSetsOnlyVersions()
+    {
+        string[] versions = ["2.0.0", "1.0.0"];
+
+        var result = NuGetPackageVersionsLookup.Found(versions);
+
+        Assert.Same(versions, result.Versions);
+        Assert.Null(result.Problem);
+    }
+
+    [Fact]
+    public void NotFoundSetsOnlyProblem()
+    {
+        var result = NuGetPackageVersionsLookup.NotFound("Package versions were not found.");
+
+        Assert.Null(result.Versions);
+        Assert.NotNull(result.Problem);
+    }
+}
+
+public sealed class NuGetToolCollectionResultTests
+{
+    [Fact]
+    public void ReadOnlyListConstructorExposesItems()
+    {
+        IReadOnlyList<string> items = new List<string> { "first", "second" };
+
+        var result = new TestCollectionResult(items);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal("first", result[0]);
+        Assert.Equal(["first", "second"], result.ToArray());
+    }
+
+    [Fact]
+    public void SpanConstructorCopiesItems()
+    {
+        string[] items = ["first", "second"];
+
+        var result = new TestCollectionResult(items.AsSpan());
+
+        items[0] = "changed";
+        Assert.Equal(["first", "second"], result.ToArray());
+    }
+
+    [Fact]
+    public void DefaultConstructorExposesEmptyItems()
+    {
+        var result = new TestCollectionResult();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void NonGenericEnumeratorExposesItems()
+    {
+        System.Collections.IEnumerable result = new TestCollectionResult(new List<string> { "first", "second" });
+
+        var enumerator = result.GetEnumerator();
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal("first", enumerator.Current);
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal("second", enumerator.Current);
+        Assert.False(enumerator.MoveNext());
+    }
+
+    private sealed record TestCollectionResult : NuGetToolCollectionResult<string>
+    {
+        public TestCollectionResult() { }
+
+        public TestCollectionResult(IReadOnlyList<string> items)
+            : base(items) { }
+
+        public TestCollectionResult(ReadOnlySpan<string> items)
+            : base(items) { }
+    }
+}
