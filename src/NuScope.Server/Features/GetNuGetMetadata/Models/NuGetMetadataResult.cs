@@ -1,12 +1,12 @@
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+namespace Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 
 public sealed record NuGetMetadataResult : NuGetToolResult
 {
-    public string? Id { get; init; }
+    public required string Id { get; init; }
 
-    public string? Version { get; init; }
+    public required string Version { get; init; }
 
     public string? Title { get; init; }
 

@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Models;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.GetNuGetUrls.Models;
 
-namespace Raiqub.NuSpec.Features.GetNuGetUrls.Services;
+namespace Raiqub.NuScope.Features.GetNuGetUrls.Services;
 
 public static class NuGetPackageUrlExtractor
 {
@@ -13,11 +13,13 @@ public static class NuGetPackageUrlExtractor
 
     public static NuGetPackageUrlsResult Extract(NuGetPackageMetadata metadata)
     {
+        var id = metadata.Id;
+        var version = metadata.Version;
         var projectUrl = NormalizeUrl(metadata.ProjectUrl);
         var repositoryUrl = NormalizeUrl(metadata.Repository?.Url);
         var otherUrls = GetOtherUrls(metadata, projectUrl, repositoryUrl);
 
-        return NuGetPackageUrlsResult.Found(projectUrl, repositoryUrl, otherUrls);
+        return NuGetPackageUrlsResult.Found(id, version, projectUrl, repositoryUrl, otherUrls);
     }
 
     private static NuGetPackageMetadataUrl[] GetOtherUrls(

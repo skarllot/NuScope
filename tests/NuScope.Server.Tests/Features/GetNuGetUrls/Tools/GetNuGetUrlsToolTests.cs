@@ -1,11 +1,11 @@
 using System.IO.Abstractions.TestingHelpers;
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Models;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetUrls.Models;
+using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.GetNuGetUrls.Tools;
+namespace Raiqub.NuScope.Tests.Features.GetNuGetUrls.Tools;
 
 public sealed class GetNuGetUrlsToolTests
 {

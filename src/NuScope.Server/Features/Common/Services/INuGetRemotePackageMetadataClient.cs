@@ -2,7 +2,7 @@ using Raiqub.NuScope.Features.Common.Models;
 
 namespace Raiqub.NuScope.Features.Common.Services;
 
-public interface INuGetPackageMetadataService
+public interface INuGetRemotePackageMetadataClient
 {
     NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null);
 

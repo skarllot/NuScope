@@ -1,46 +1,135 @@
-using System.Globalization;
 using System.IO.Abstractions;
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.Common.Services;
+namespace Raiqub.NuScope.Features.Common.Services;
 
-public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPackageMetadataParser parser)
-    : INuGetPackageMetadataService
+public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
 {
+    private readonly IFileSystem fileSystem;
+    private readonly INuGetPackageMetadataParser parser;
+    private readonly INuGetRemotePackageMetadataClient remoteMetadataClient;
+
+    public NuGetPackageMetadataService(
+        IFileSystem fileSystem,
+        INuGetPackageMetadataParser parser,
+        INuGetRemotePackageMetadataClient remoteMetadataClient
+    )
+    {
+        this.fileSystem = fileSystem;
+        this.parser = parser;
+        this.remoteMetadataClient = remoteMetadataClient;
+    }
+
+    public NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPackageMetadataParser parser)
+        : this(fileSystem, parser, NoOpRemotePackageMetadataClient.Instance) { }
+
     public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
 
-        var resolvedVersion = string.IsNullOrWhiteSpace(version) ? GetLatestVersion(packageName) : version;
-        if (resolvedVersion is null)
+        var resolvedVersion = version;
+        if (string.IsNullOrWhiteSpace(resolvedVersion))
         {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' was not found in the local NuGet cache."
-            );
+            var latestVersionLookup = GetLatestPackageVersion(packageName);
+            if (latestVersionLookup.Problem is not null)
+            {
+                return NuGetPackageMetadataLookup.FromProblem(latestVersionLookup.Problem);
+            }
+
+            resolvedVersion = latestVersionLookup.Versions![0];
         }
 
-        var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
-        if (!fileSystem.Directory.Exists(packageDirectory))
+        var localLookup = GetLocalNuGetPackageMetadata(packageName, resolvedVersion);
+        if (!localLookup.ShouldFallback)
         {
-            return NuGetPackageMetadataLookup.NotFound(
-                $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
-            );
+            return localLookup.Lookup;
         }
 
+        var remoteLookup = remoteMetadataClient.GetNuGetPackageMetadata(packageName, resolvedVersion);
+        return remoteLookup.Metadata is not null || remoteLookup.Problem is not null
+            ? remoteLookup
+            : localLookup.Lookup;
+    }
+
+    public NuGetPackageVersionsLookup GetNuGetPackageVersions(
+        string packageName,
+        int? minimumMajor = null,
+        bool includePreRelease = false,
+        int? maxItems = null
+    )
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
+        ThrowIfNegative(minimumMajor);
+        ThrowIfNotPositive(maxItems);
+
+        var localLookup = GetLocalNuGetPackageVersions(packageName, minimumMajor, includePreRelease);
+        var remoteLookup = remoteMetadataClient.GetNuGetPackageVersions(
+            packageName,
+            minimumMajor,
+            includePreRelease,
+            maxItems
+        );
+
+        if (localLookup.Versions is not null || remoteLookup.Versions is not null)
+        {
+            var versions = MergeVersions(
+                localLookup.Versions ?? [],
+                remoteLookup.Versions ?? [],
+                minimumMajor,
+                includePreRelease,
+                maxItems
+            );
+            return versions.Length == 0
+                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                : NuGetPackageVersionsLookup.Found(versions);
+        }
+
+        if (remoteLookup.Problem is { Status: not 404 })
+        {
+            return remoteLookup;
+        }
+
+        if (localLookup.Problem is { Status: not 404 })
+        {
+            return localLookup;
+        }
+
+        return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor));
+    }
+
+    private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string version)
+    {
         try
         {
+            var packageDirectory = GetPackageDirectory(packageName, version);
+            if (!fileSystem.Directory.Exists(packageDirectory))
+            {
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{version}' was not found in the local NuGet cache."
+                    ),
+                    ShouldFallback: true
+                );
+            }
+
             var nuspecPaths = fileSystem.Directory.EnumerateFiles(packageDirectory, "*.nuspec").ToArray();
             if (nuspecPaths.Length == 0)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{version}' exists in the local NuGet cache, but no .nuspec file was found."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
             if (nuspecPaths.Length > 1)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{version}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
@@ -50,48 +139,179 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
             var metadata = parser.Parse(stream);
             if (metadata is null)
             {
-                return NuGetPackageMetadataLookup.NotFound(
-                    $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
+                return new LocalNuGetPackageMetadataLookup(
+                    NuGetPackageMetadataLookup.NotFound(
+                        $"Package '{packageName}' version '{version}' has an invalid or malformed .nuspec file."
+                    ),
+                    ShouldFallback: false
                 );
             }
 
-            return NuGetPackageMetadataLookup.Found(metadata);
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.Found(metadata),
+                ShouldFallback: false
+            );
         }
         catch (UnauthorizedAccessException)
         {
-            return NuGetPackageMetadataLookup.FromProblem(
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.FromProblem(
+                    NuGetProblemDetailsResult.Forbidden(
+                        $"Access to {DescribeLocalPackageLookup(packageName, version)} in the local NuGet cache was denied."
+                    )
+                ),
+                ShouldFallback: false
+            );
+        }
+        catch (IOException)
+        {
+            return new LocalNuGetPackageMetadataLookup(
+                NuGetPackageMetadataLookup.FromProblem(
+                    NuGetProblemDetailsResult.InternalServerError(
+                        $"An I/O error occurred while reading {DescribeLocalPackageLookup(packageName, version)} from the local NuGet cache."
+                    )
+                ),
+                ShouldFallback: false
+            );
+        }
+    }
+
+    private NuGetPackageVersionsLookup GetLatestPackageVersion(string packageName)
+    {
+        var localVersionsLookup = GetLocalNuGetPackageVersions(
+            packageName,
+            minimumMajor: null,
+            includePreRelease: true
+        );
+        if (localVersionsLookup.Problem is { Status: not 404 })
+        {
+            return localVersionsLookup;
+        }
+
+        var remoteVersionsLookup = remoteMetadataClient.GetNuGetPackageVersions(
+            packageName,
+            minimumMajor: null,
+            includePreRelease: true
+        );
+
+        if (localVersionsLookup.Versions is not null || remoteVersionsLookup.Versions is not null)
+        {
+            var versions = MergeVersions(
+                localVersionsLookup.Versions ?? [],
+                remoteVersionsLookup.Versions ?? [],
+                minimumMajor: null,
+                includePreRelease: true,
+                maxItems: 1
+            );
+            return versions.Length == 0
+                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor: null))
+                : NuGetPackageVersionsLookup.Found(versions);
+        }
+
+        if (remoteVersionsLookup.Problem is { Status: not 404 })
+        {
+            return remoteVersionsLookup;
+        }
+
+        return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor: null));
+    }
+
+    private NuGetPackageVersionsLookup GetLocalNuGetPackageVersions(
+        string packageName,
+        int? minimumMajor,
+        bool includePreRelease
+    )
+    {
+        try
+        {
+            var packageRootDirectory = GetPackageRootDirectory(packageName);
+            if (!fileSystem.Directory.Exists(packageRootDirectory))
+            {
+                return NuGetPackageVersionsLookup.NotFound(
+                    $"Package '{packageName}' was not found in the local NuGet cache."
+                );
+            }
+
+            var versions = fileSystem
+                .Directory.EnumerateDirectories(packageRootDirectory)
+                .Select(fileSystem.Path.GetFileName)
+                .OfType<string>()
+                .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
+                .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease))
+                .OrderByDescending(version => version.Parsed)
+                .Select(version => version.Version)
+                .ToArray();
+
+            return versions.Length == 0
+                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                : NuGetPackageVersionsLookup.Found(versions);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NuGetPackageVersionsLookup.FromProblem(
                 NuGetProblemDetailsResult.Forbidden(
-                    $"Access to package '{packageName}' version '{resolvedVersion}' in the local NuGet cache was denied."
+                    $"Access to package '{packageName}' versions in the local NuGet cache was denied."
                 )
             );
         }
         catch (IOException)
         {
-            return NuGetPackageMetadataLookup.FromProblem(
+            return NuGetPackageVersionsLookup.FromProblem(
                 NuGetProblemDetailsResult.InternalServerError(
-                    $"An I/O error occurred while reading package '{packageName}' version '{resolvedVersion}' from the local NuGet cache."
+                    $"An I/O error occurred while reading package '{packageName}' versions from the local NuGet cache."
                 )
             );
         }
     }
 
-    private string? GetLatestVersion(string packageName)
+    private static string[] MergeVersions(
+        IReadOnlyList<string> localVersions,
+        IReadOnlyList<string> remoteVersions,
+        int? minimumMajor,
+        bool includePreRelease,
+        int? maxItems
+    )
     {
-        var packageRootDirectory = GetPackageRootDirectory(packageName);
-        if (!fileSystem.Directory.Exists(packageRootDirectory))
+        var versions = localVersions
+            .Concat(remoteVersions)
+            .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
+            .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease))
+            .GroupBy(version => version.Version, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .OrderByDescending(version => version.Parsed)
+            .Select(version => version.Version);
+
+        if (maxItems is not null)
         {
-            return null;
+            versions = versions.Take(maxItems.Value);
         }
 
-        return fileSystem
-            .Directory.EnumerateDirectories(packageRootDirectory)
-            .Select(fileSystem.Path.GetFileName)
-            .OfType<string>()
-            .Select(version => new { Version = version, Parsed = PackageVersion.TryParse(version) })
-            .Where(version => version.Parsed is not null)
-            .OrderByDescending(version => version.Parsed)
-            .FirstOrDefault()
-            ?.Version;
+        return versions.ToArray();
+    }
+
+    private static bool VersionMatchesFilter(NuGetPackageVersion? version, int? minimumMajor, bool includePreRelease) =>
+        version is not null
+        && (includePreRelease || version.Prerelease is null)
+        && (minimumMajor is null || version.Release[0] >= minimumMajor.Value);
+
+    private static void ThrowIfNegative(int? minimumMajor)
+    {
+        if (minimumMajor < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(minimumMajor),
+                minimumMajor,
+                "Minimum major must be non-negative."
+            );
+        }
+    }
+
+    private static void ThrowIfNotPositive(int? maxItems)
+    {
+        if (maxItems < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxItems), maxItems, "Maximum items must be positive.");
+        }
     }
 
     private string GetPackageDirectory(string packageName, string version)
@@ -105,99 +325,45 @@ public sealed class NuGetPackageMetadataService(IFileSystem fileSystem, INuGetPa
         return fileSystem.Path.Combine(userProfile, ".nuget", "packages", packageName.ToLowerInvariant());
     }
 
-    private sealed record PackageVersion(int[] Release, string? Prerelease) : IComparable<PackageVersion>
+    private static string DescribeLocalPackageLookup(string packageName, string? resolvedVersion)
     {
-        public static PackageVersion? TryParse(string version)
-        {
-            var versionWithoutMetadata = version.Split('+', 2)[0];
-            var parts = versionWithoutMetadata.Split('-', 2);
-            var release = parts[0]
-                .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(part => int.TryParse(part, out var parsed) ? parsed : (int?)null)
-                .ToArray();
+        return resolvedVersion is null
+            ? $"package '{packageName}' while resolving the latest available version"
+            : $"package '{packageName}' version '{resolvedVersion}'";
+    }
 
-            return release.Length == 0 || release.Any(part => part is null)
-                ? null
-                : new PackageVersion(release.Select(part => part!.Value).ToArray(), parts.Length > 1 ? parts[1] : null);
+    private sealed record LocalNuGetPackageMetadataLookup(NuGetPackageMetadataLookup Lookup, bool ShouldFallback);
+
+    private sealed class NoOpRemotePackageMetadataClient : INuGetRemotePackageMetadataClient
+    {
+        public static readonly NoOpRemotePackageMetadataClient Instance = new();
+
+        public NuGetPackageMetadataLookup GetNuGetPackageMetadata(string packageName, string? version = null)
+        {
+            return string.IsNullOrWhiteSpace(version)
+                ? NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' was not found in the local NuGet cache."
+                )
+                : NuGetPackageMetadataLookup.NotFound(
+                    $"Package '{packageName}' version '{version}' was not found in the local NuGet cache."
+                );
         }
 
-        public int CompareTo(PackageVersion? other)
+        public NuGetPackageVersionsLookup GetNuGetPackageVersions(
+            string packageName,
+            int? minimumMajor = null,
+            bool includePreRelease = false,
+            int? maxItems = null
+        )
         {
-            if (other is null)
-            {
-                return 1;
-            }
-
-            var releaseLength = Math.Max(Release.Length, other.Release.Length);
-            for (var index = 0; index < releaseLength; index++)
-            {
-                var comparison = GetReleasePart(index).CompareTo(other.GetReleasePart(index));
-                if (comparison != 0)
-                {
-                    return comparison;
-                }
-            }
-
-            return ComparePrerelease(other);
+            return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor));
         }
+    }
 
-        private int ComparePrerelease(PackageVersion other)
-        {
-            return (Prerelease, other.Prerelease) switch
-            {
-                (null, null) => 0,
-                (null, _) => 1,
-                (_, null) => -1,
-                _ => ComparePrereleaseIdentifiers(Prerelease, other.Prerelease),
-            };
-        }
-
-        private int GetReleasePart(int index) => index < Release.Length ? Release[index] : 0;
-
-        private static int ComparePrereleaseIdentifiers(string prerelease, string otherPrerelease)
-        {
-            var identifiers = prerelease.Split('.');
-            var otherIdentifiers = otherPrerelease.Split('.');
-            var identifierLength = Math.Max(identifiers.Length, otherIdentifiers.Length);
-
-            for (var index = 0; index < identifierLength; index++)
-            {
-                if (index >= identifiers.Length)
-                {
-                    return -1;
-                }
-
-                if (index >= otherIdentifiers.Length)
-                {
-                    return 1;
-                }
-
-                var identifier = identifiers[index];
-                var otherIdentifier = otherIdentifiers[index];
-                var identifierIsNumeric = IsNumericIdentifier(identifier);
-                var otherIdentifierIsNumeric = IsNumericIdentifier(otherIdentifier);
-
-                var comparison = (identifierIsNumeric, otherIdentifierIsNumeric) switch
-                {
-                    (true, false) => -1,
-                    (false, true) => 1,
-                    _ => CultureInfo.InvariantCulture.CompareInfo.Compare(
-                        identifier,
-                        otherIdentifier,
-                        CompareOptions.IgnoreCase | CompareOptions.NumericOrdering
-                    ),
-                };
-
-                if (comparison != 0)
-                {
-                    return comparison;
-                }
-            }
-
-            return 0;
-        }
-
-        private static bool IsNumericIdentifier(string identifier) =>
-            identifier.Length > 0 && identifier.All(char.IsAsciiDigit);
+    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor)
+    {
+        return minimumMajor is null
+            ? $"Package '{packageName}' versions were not found."
+            : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} were not found.";
     }
 }

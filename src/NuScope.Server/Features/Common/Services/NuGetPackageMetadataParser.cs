@@ -1,7 +1,7 @@
 using System.Xml.Linq;
-using Raiqub.NuSpec.Features.Common.Models;
+using Raiqub.NuScope.Features.Common.Models;
 
-namespace Raiqub.NuSpec.Features.Common.Services;
+namespace Raiqub.NuScope.Features.Common.Services;
 
 public sealed class NuGetPackageMetadataParser : INuGetPackageMetadataParser
 {
@@ -24,10 +24,17 @@ public sealed class NuGetPackageMetadataParser : INuGetPackageMetadataParser
             return null;
         }
 
+        var id = Value(metadata, "id");
+        var version = Value(metadata, "version");
+        if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(version))
+        {
+            return null;
+        }
+
         return new NuGetPackageMetadata
         {
-            Id = Value(metadata, "id"),
-            Version = Value(metadata, "version"),
+            Id = id,
+            Version = version,
             Title = Value(metadata, "title"),
             Authors = Value(metadata, "authors"),
             Owners = Value(metadata, "owners"),

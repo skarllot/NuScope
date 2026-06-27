@@ -1,6 +1,6 @@
-using CommonRepository = Raiqub.NuSpec.Features.Common.Models.NuGetRepositoryMetadata;
+using CommonRepository = Raiqub.NuScope.Features.Common.Models.NuGetRepositoryMetadata;
 
-namespace Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+namespace Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 
 public sealed record NuGetMetadataRepository
 {

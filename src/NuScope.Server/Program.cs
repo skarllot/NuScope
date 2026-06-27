@@ -2,9 +2,10 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Raiqub.NuSpec.Features.Common.Services;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Tools;
-using Raiqub.NuSpec.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Features.Common.Services;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
+using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Features.GetNuGetVersions.Tools;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -14,14 +15,17 @@ builder.Logging.AddConsole(options =>
 });
 
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
+builder.Services.AddSingleton<HttpClient>();
 builder.Services.AddSingleton<INuGetPackageMetadataParser, NuGetPackageMetadataParser>();
+builder.Services.AddSingleton<INuGetRemotePackageMetadataClient, NuGetOrgPackageMetadataClient>();
 builder.Services.AddSingleton<INuGetPackageMetadataService, NuGetPackageMetadataService>();
 
 builder
     .Services.AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<GetNuGetMetadataTool>()
-    .WithTools<GetNuGetUrlsTool>();
+    .WithTools<GetNuGetUrlsTool>()
+    .WithTools<GetNuGetVersionsTool>();
 
 await builder.Build().RunAsync();
 

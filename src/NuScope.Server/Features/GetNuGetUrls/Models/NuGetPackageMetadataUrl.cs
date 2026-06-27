@@ -1,4 +1,4 @@
-namespace Raiqub.NuSpec.Features.GetNuGetUrls.Models;
+namespace Raiqub.NuScope.Features.GetNuGetUrls.Models;
 
 public sealed record NuGetPackageMetadataUrl
 {

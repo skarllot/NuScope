@@ -1,8 +1,8 @@
-using Raiqub.NuSpec.Features.Common.Models;
-using Raiqub.NuSpec.Features.GetNuGetMetadata.Models;
+using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 using Xunit;
 
-namespace Raiqub.NuSpec.Tests.Features.GetNuGetMetadata.Models;
+namespace Raiqub.NuScope.Tests.Features.GetNuGetMetadata.Models;
 
 public sealed class NuGetMetadataResultTests
 {
@@ -42,6 +42,8 @@ public sealed class NuGetMetadataResultTests
     {
         var metadata = new NuGetPackageMetadata
         {
+            Id = "Package",
+            Version = "1.0.0",
             DependencyGroups =
             [
                 new NuGetDependencyGroup

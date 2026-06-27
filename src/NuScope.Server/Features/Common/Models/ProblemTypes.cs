@@ -1,4 +1,4 @@
-namespace Raiqub.NuSpec.Features.Common.Models;
+namespace Raiqub.NuScope.Features.Common.Models;
 
 public static class ProblemTypes
 {
@@ -6,4 +6,5 @@ public static class ProblemTypes
     public const string InternalServerError =
         "https://www.rfc-editor.org/rfc/rfc9110.html#name-500-internal-server-error";
     public const string NotFound = "https://www.rfc-editor.org/rfc/rfc9110.html#name-404-not-found";
+    public const string ServiceUnavailable = "https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable";
 }
