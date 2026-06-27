@@ -786,6 +786,29 @@ public sealed class NuGetPackageMetadataServiceTests
     }
 
     [Fact]
+    public void GetNuGetPackageVersionsReturnsForbiddenWhenLocalEnumerationIsDenied()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Versions");
+        var innerFileSystem = new MockFileSystem();
+        innerFileSystem.AddDirectory(packageRootDirectory);
+        var fileSystem = new ThrowingOnEnumerateFileSystem(
+            innerFileSystem,
+            packageRootDirectory,
+            new UnauthorizedAccessException("Denied.")
+        );
+        var remoteClient = new RecordingRemotePackageMetadataClient();
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageVersions("Package.With.Versions");
+
+        AssertVersionsProblem(result, ProblemTypes.Forbidden, 403, "was denied");
+        Assert.Equal("Package.With.Versions", remoteClient.VersionsPackageName);
+    }
+
+    [Fact]
     public void GetNuGetPackageVersionsRejectsNegativeMinimumMajor()
     {
         var service = new NuGetPackageMetadataService(new MockFileSystem(), new RecordingNuGetPackageMetadataParser());
@@ -926,7 +949,7 @@ public sealed class NuGetPackageMetadataServiceTests
     {
         private readonly IFileSystem innerFileSystem;
 
-        public ThrowingOnEnumerateFileSystem(IFileSystem innerFileSystem, string pathToThrow, IOException exception)
+        public ThrowingOnEnumerateFileSystem(IFileSystem innerFileSystem, string pathToThrow, Exception exception)
         {
             this.innerFileSystem = innerFileSystem;
             Directory = new ThrowingOnEnumerateMockDirectory(
@@ -958,7 +981,7 @@ public sealed class NuGetPackageMetadataServiceTests
     private sealed class ThrowingOnEnumerateMockDirectory(
         IMockFileDataAccessor fileDataAccessor,
         string pathToThrow,
-        IOException exception
+        Exception exception
     ) : MockDirectory(fileDataAccessor, Directory.GetCurrentDirectory())
     {
         public override IEnumerable<string> EnumerateDirectories(string path)

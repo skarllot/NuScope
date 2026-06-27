@@ -65,7 +65,9 @@ public sealed class NuGetToolCollectionResultTests
     [Fact]
     public void ReadOnlyListConstructorExposesItems()
     {
-        var result = new TestCollectionResult(["first", "second"]);
+        IReadOnlyList<string> items = new List<string> { "first", "second" };
+
+        var result = new TestCollectionResult(items);
 
         Assert.Equal(2, result.Count);
         Assert.Equal("first", result[0]);
@@ -94,9 +96,14 @@ public sealed class NuGetToolCollectionResultTests
     [Fact]
     public void NonGenericEnumeratorExposesItems()
     {
-        System.Collections.IEnumerable result = new TestCollectionResult(["first", "second"]);
+        System.Collections.IEnumerable result = new TestCollectionResult(new List<string> { "first", "second" });
 
-        Assert.Equal(["first", "second"], result.Cast<string>().ToArray());
+        var enumerator = result.GetEnumerator();
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal("first", enumerator.Current);
+        Assert.True(enumerator.MoveNext());
+        Assert.Equal("second", enumerator.Current);
+        Assert.False(enumerator.MoveNext());
     }
 
     private sealed record TestCollectionResult : NuGetToolCollectionResult<string>

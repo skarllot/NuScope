@@ -740,6 +740,28 @@ public sealed class NuGetOrgPackageMetadataClientTests
         AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "could not be reached");
     }
 
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsServiceUnavailableWhenVersionsSendThrowsIOException()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+        {
+            return request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/package.with.case/index.json" => throw new IOException(
+                    "Socket read failed."
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            };
+        });
+
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Package.With.Case");
+
+        AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "network I/O error occurred");
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -752,6 +774,19 @@ public sealed class NuGetOrgPackageMetadataClientTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             client.GetNuGetPackageVersions("Any.Package", maxItems: maxItems)
+        );
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsRejectsNegativeMinimumMajor()
+    {
+        var handler = new StubHttpMessageHandler(_ =>
+            throw new Xunit.Sdk.XunitException("Request should not be sent.")
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            client.GetNuGetPackageVersions("Any.Package", minimumMajor: -1)
         );
     }
 

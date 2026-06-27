@@ -97,33 +97,16 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor));
     }
 
-    private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string? version)
+    private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string version)
     {
-        var resolvedVersion = version;
-
         try
         {
-            if (string.IsNullOrWhiteSpace(resolvedVersion))
-            {
-                resolvedVersion = GetLatestVersion(packageName);
-            }
-
-            if (resolvedVersion is null)
-            {
-                return new LocalNuGetPackageMetadataLookup(
-                    NuGetPackageMetadataLookup.NotFound(
-                        $"Package '{packageName}' was not found in the local NuGet cache."
-                    ),
-                    ShouldFallback: true
-                );
-            }
-
-            var packageDirectory = GetPackageDirectory(packageName, resolvedVersion);
+            var packageDirectory = GetPackageDirectory(packageName, version);
             if (!fileSystem.Directory.Exists(packageDirectory))
             {
                 return new LocalNuGetPackageMetadataLookup(
                     NuGetPackageMetadataLookup.NotFound(
-                        $"Package '{packageName}' version '{resolvedVersion}' was not found in the local NuGet cache."
+                        $"Package '{packageName}' version '{version}' was not found in the local NuGet cache."
                     ),
                     ShouldFallback: true
                 );
@@ -134,7 +117,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             {
                 return new LocalNuGetPackageMetadataLookup(
                     NuGetPackageMetadataLookup.NotFound(
-                        $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but no .nuspec file was found."
+                        $"Package '{packageName}' version '{version}' exists in the local NuGet cache, but no .nuspec file was found."
                     ),
                     ShouldFallback: false
                 );
@@ -144,7 +127,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             {
                 return new LocalNuGetPackageMetadataLookup(
                     NuGetPackageMetadataLookup.NotFound(
-                        $"Package '{packageName}' version '{resolvedVersion}' exists in the local NuGet cache, but multiple .nuspec files were found."
+                        $"Package '{packageName}' version '{version}' exists in the local NuGet cache, but multiple .nuspec files were found."
                     ),
                     ShouldFallback: false
                 );
@@ -158,7 +141,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             {
                 return new LocalNuGetPackageMetadataLookup(
                     NuGetPackageMetadataLookup.NotFound(
-                        $"Package '{packageName}' version '{resolvedVersion}' has an invalid or malformed .nuspec file."
+                        $"Package '{packageName}' version '{version}' has an invalid or malformed .nuspec file."
                     ),
                     ShouldFallback: false
                 );
@@ -174,7 +157,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             return new LocalNuGetPackageMetadataLookup(
                 NuGetPackageMetadataLookup.FromProblem(
                     NuGetProblemDetailsResult.Forbidden(
-                        $"Access to {DescribeLocalPackageLookup(packageName, resolvedVersion)} in the local NuGet cache was denied."
+                        $"Access to {DescribeLocalPackageLookup(packageName, version)} in the local NuGet cache was denied."
                     )
                 ),
                 ShouldFallback: false
@@ -185,31 +168,12 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             return new LocalNuGetPackageMetadataLookup(
                 NuGetPackageMetadataLookup.FromProblem(
                     NuGetProblemDetailsResult.InternalServerError(
-                        $"An I/O error occurred while reading {DescribeLocalPackageLookup(packageName, resolvedVersion)} from the local NuGet cache."
+                        $"An I/O error occurred while reading {DescribeLocalPackageLookup(packageName, version)} from the local NuGet cache."
                     )
                 ),
                 ShouldFallback: false
             );
         }
-    }
-
-    private string? GetLatestVersion(string packageName)
-    {
-        var packageRootDirectory = GetPackageRootDirectory(packageName);
-        if (!fileSystem.Directory.Exists(packageRootDirectory))
-        {
-            return null;
-        }
-
-        return fileSystem
-            .Directory.EnumerateDirectories(packageRootDirectory)
-            .Select(fileSystem.Path.GetFileName)
-            .OfType<string>()
-            .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
-            .Where(version => version.Parsed is not null)
-            .OrderByDescending(version => version.Parsed)
-            .FirstOrDefault()
-            ?.Version;
     }
 
     private NuGetPackageVersionsLookup GetLatestPackageVersion(string packageName)
