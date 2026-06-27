@@ -147,6 +147,72 @@ public sealed class NuGetPackageMetadataServiceTests
     }
 
     [Fact]
+    public void GetNuGetPackageMetadataUsesLocalLatestWhenRemoteVersionLookupFails()
+    {
+        var packageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0");
+        var nuspecPath = Path.Combine(packageDirectory, "package.with.metadata.nuspec");
+        var expectedMetadata = new NuGetPackageMetadata { Id = "Package.With.Metadata", Version = "2.0.0" };
+        var fileSystem = new MockFileSystem(
+            new Dictionary<string, MockFileData> { [nuspecPath] = new MockFileData("<package><metadata /></package>") }
+        );
+        fileSystem.AddDirectory(packageDirectory);
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable("nuget.org failed.")
+            )
+        );
+
+        var parser = new RecordingNuGetPackageMetadataParser(expectedMetadata);
+        var result = new NuGetPackageMetadataService(fileSystem, parser, remoteClient).GetNuGetPackageMetadata(
+            "Package.With.Metadata"
+        );
+
+        var success = Assert.IsType<NuGetPackageMetadata>(result.Metadata);
+        Assert.Equal("2.0.0", success.Version);
+        Assert.Null(remoteClient.PackageName);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsRemoteVersionLookupProblemWhenNoLocalVersionsExist()
+    {
+        var fileSystem = new MockFileSystem();
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable("nuget.org failed.")
+            )
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageMetadata("Package.With.Metadata");
+
+        AssertProblem(result, ProblemTypes.ServiceUnavailable, "Service Unavailable", 503, "nuget.org failed");
+        Assert.Null(remoteClient.PackageName);
+    }
+
+    [Fact]
+    public void GetNuGetPackageMetadataReturnsNotFoundWhenMergedLatestVersionsAreInvalid()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Metadata");
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "not-a-version"));
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.Found(["also-invalid"])
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageMetadata("Package.With.Metadata");
+
+        AssertNotFoundProblem(result, "versions were not found");
+        Assert.Null(remoteClient.PackageName);
+    }
+
+    [Fact]
     public void GetNuGetPackageMetadataUsesLatestNumericPrereleaseIdentifierWhenVersionIsNotProvided()
     {
         var lowPrereleasePackageDirectory = GetPackageDirectory("Package.With.Metadata", "2.0.0-beta.2");
@@ -675,6 +741,48 @@ public sealed class NuGetPackageMetadataServiceTests
 
         Assert.Null(result.Problem);
         Assert.Equal(["2.0.0", "1.0.0"], result.Versions);
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsRemoteProblemWhenLocalPackageIsAbsent()
+    {
+        var fileSystem = new MockFileSystem();
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.FromProblem(
+                NuGetProblemDetailsResult.ServiceUnavailable("nuget.org failed.")
+            )
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageVersions("Package.With.Versions");
+
+        AssertVersionsProblem(result, ProblemTypes.ServiceUnavailable, 503, "nuget.org failed");
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsReturnsLocalProblemWhenLocalEnumerationFails()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Versions");
+        var innerFileSystem = new MockFileSystem();
+        innerFileSystem.AddDirectory(packageRootDirectory);
+        var fileSystem = new ThrowingOnEnumerateFileSystem(
+            innerFileSystem,
+            packageRootDirectory,
+            new IOException("Read failed.")
+        );
+        var remoteClient = new RecordingRemotePackageMetadataClient();
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageVersions("Package.With.Versions");
+
+        AssertVersionsProblem(result, ProblemTypes.InternalServerError, 500, "I/O error occurred");
+        Assert.Equal("Package.With.Versions", remoteClient.VersionsPackageName);
     }
 
     [Fact]

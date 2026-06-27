@@ -59,3 +59,54 @@ public sealed class NuGetPackageVersionsLookupTests
         Assert.NotNull(result.Problem);
     }
 }
+
+public sealed class NuGetToolCollectionResultTests
+{
+    [Fact]
+    public void ReadOnlyListConstructorExposesItems()
+    {
+        var result = new TestCollectionResult(["first", "second"]);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal("first", result[0]);
+        Assert.Equal(["first", "second"], result.ToArray());
+    }
+
+    [Fact]
+    public void SpanConstructorCopiesItems()
+    {
+        string[] items = ["first", "second"];
+
+        var result = new TestCollectionResult(items.AsSpan());
+
+        items[0] = "changed";
+        Assert.Equal(["first", "second"], result.ToArray());
+    }
+
+    [Fact]
+    public void DefaultConstructorExposesEmptyItems()
+    {
+        var result = new TestCollectionResult();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void NonGenericEnumeratorExposesItems()
+    {
+        System.Collections.IEnumerable result = new TestCollectionResult(["first", "second"]);
+
+        Assert.Equal(["first", "second"], result.Cast<string>().ToArray());
+    }
+
+    private sealed record TestCollectionResult : NuGetToolCollectionResult<string>
+    {
+        public TestCollectionResult() { }
+
+        public TestCollectionResult(IReadOnlyList<string> items)
+            : base(items) { }
+
+        public TestCollectionResult(ReadOnlySpan<string> items)
+            : base(items) { }
+    }
+}
