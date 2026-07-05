@@ -484,6 +484,7 @@
         "dependencies": {
           "Microsoft.Extensions.Hosting": "[10.0.9, )",
           "ModelContextProtocol": "[1.4.0, )",
+          "NuGet.Frameworks": "[7.6.0, )",
           "TestableIO.System.IO.Abstractions.Wrappers": "[22.1.1, )"
         }
       },
@@ -527,6 +528,12 @@
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.7",
           "ModelContextProtocol.Core": "1.4.0"
         }
+      },
+      "NuGet.Frameworks": {
+        "type": "CentralTransitive",
+        "requested": "[7.6.0, )",
+        "resolved": "7.6.0",
+        "contentHash": "rJ7QtKN45XzLXCrMATve6eFLiUyUGEkA1rFSb6U6Fw6laM4hEAcKOrcdbgWlcFUlCK2158qP1LF00hg/ivF3nw=="
       },
       "TestableIO.System.IO.Abstractions.Wrappers": {
         "type": "CentralTransitive",

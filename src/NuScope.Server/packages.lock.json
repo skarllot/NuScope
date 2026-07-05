@@ -55,6 +55,12 @@
         "resolved": "3.10.85",
         "contentHash": "smhqiTAbnI/6NRn+k7m+a65qKY7nREbnFqFgqxiw3JS8kXiBUOxdCxIZFP9TOpCsoh46DbMlBlcd+dWQYAVVCA=="
       },
+      "NuGet.Frameworks": {
+        "type": "Direct",
+        "requested": "[7.6.0, )",
+        "resolved": "7.6.0",
+        "contentHash": "rJ7QtKN45XzLXCrMATve6eFLiUyUGEkA1rFSb6U6Fw6laM4hEAcKOrcdbgWlcFUlCK2158qP1LF00hg/ivF3nw=="
+      },
       "TestableIO.System.IO.Abstractions.Wrappers": {
         "type": "Direct",
         "requested": "[22.1.1, )",

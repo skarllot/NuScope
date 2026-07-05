@@ -19,6 +19,9 @@ public sealed record NuGetProblemDetailsResult : NuGetToolResult
             Detail = detail,
         };
 
+    public static NuGetProblemDetailsResult BadRequest(string detail) =>
+        Problem(ProblemTypes.BadRequest, "Bad Request", 400, detail);
+
     public static NuGetProblemDetailsResult Forbidden(string detail) =>
         Problem(ProblemTypes.Forbidden, "Forbidden", 403, detail);
 
