@@ -8,6 +8,8 @@ namespace Raiqub.NuScope.Features.ListTypes.Services;
 
 public sealed class NuGetPackageTypeListingService : INuGetPackageTypeListingService
 {
+    private static readonly TimeSpan FilterRegexTimeout = TimeSpan.FromMilliseconds(100);
+
     private readonly INuGetAssemblyTypeReader assemblyTypeReader;
     private readonly INuGetPackageAssetResolver assetResolver;
 
@@ -66,6 +68,14 @@ public sealed class NuGetPackageTypeListingService : INuGetPackageTypeListingSer
             {
                 invalidAssemblyMessages.Add($"{asset.Label}: {exception.Message}");
             }
+            catch (RegexMatchTimeoutException exception)
+            {
+                return NuGetPackageTypesLookup.FromProblem(
+                    NuGetProblemDetailsResult.BadRequest(
+                        $"The filterRegex value timed out after {exception.MatchTimeout.TotalMilliseconds} ms while matching package type names."
+                    )
+                );
+            }
         }
 
         if (readableAssemblyCount == 0)
@@ -122,7 +132,7 @@ public sealed class NuGetPackageTypeListingService : INuGetPackageTypeListingSer
         {
             filter = string.IsNullOrWhiteSpace(filterRegex)
                 ? null
-                : new Regex(filterRegex, RegexOptions.CultureInvariant);
+                : new Regex(filterRegex, RegexOptions.CultureInvariant, FilterRegexTimeout);
         }
         catch (ArgumentException exception)
         {

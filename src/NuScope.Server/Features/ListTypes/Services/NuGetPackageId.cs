@@ -27,6 +27,14 @@ public static class NuGetPackageId
             );
         }
 
+        if (normalizedPackageName.Split('.').Any(segment => segment.Length == 0))
+        {
+            throw new ArgumentException(
+                "Package name contains path segments that are not valid in a NuGet package ID.",
+                nameof(packageName)
+            );
+        }
+
         return normalizedPackageName.ToLowerInvariant();
     }
 }

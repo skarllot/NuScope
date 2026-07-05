@@ -178,7 +178,7 @@ public sealed class NuGetPackageAssetResolver(IFileSystem fileSystem, HttpClient
                 GetZipAssetFramework(entry.FullName)
             ))
             .Where(asset => !string.IsNullOrWhiteSpace(asset.Name))
-            .DistinctBy(asset => asset.Name, StringComparer.OrdinalIgnoreCase)
+            .DistinctBy(asset => $"{asset.Root}/{asset.Name}", StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
         var compatibleAssetFolders = NuGetPackageAssetSelector.SelectCompatibleAssetFolders(

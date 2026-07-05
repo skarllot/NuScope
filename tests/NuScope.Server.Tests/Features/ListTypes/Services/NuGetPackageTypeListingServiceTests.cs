@@ -300,6 +300,28 @@ public sealed class NuGetPackageTypeListingServiceTests
     }
 
     [Fact]
+    public void ListTypesKeepsRemoteLibAndRefFoldersWithSameTargetFramework()
+    {
+        var assemblyBytes = GetFixtureAssemblyBytes();
+        var packageBytes = CreatePackageArchive(
+            ("lib", "net8.0", "Contract.dll", assemblyBytes),
+            ("ref", "net8.0", "Contract.dll", assemblyBytes)
+        );
+        var service = CreateService(
+            new MockFileSystem(),
+            new StubHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(packageBytes),
+            })
+        );
+
+        var result = service.ListTypes(PackageName, Version, "net8.0", "PublicClassFixture$");
+
+        var assemblies = AssertFound(result);
+        Assert.Equal(["lib/Contract.dll", "ref/Contract.dll"], assemblies.Select(assembly => assembly.Assembly));
+    }
+
+    [Fact]
     public void ListTypesSkipsUnreadableRemoteDllWhenOtherDllsAreReadable()
     {
         var packageBytes = CreatePackageArchive(
@@ -375,8 +397,29 @@ public sealed class NuGetPackageTypeListingServiceTests
         AssertProblem(result, ProblemTypes.BadRequest, 400, "filterRegex");
     }
 
+    [Fact]
+    public void ListTypesReturnsBadRequestWhenRegexMatchingTimesOut()
+    {
+        var longTypeName = new string('a', 10000) + "!";
+        var fileSystem = CreateFileSystemWithDll(
+            PackageName,
+            Version,
+            "net8.0",
+            "Forwarders.dll",
+            CreateAssemblyWithExportedType(string.Empty, longTypeName),
+            root: "ref"
+        );
+        var service = CreateService(fileSystem);
+
+        var result = service.ListTypes(PackageName, Version, "net8.0", "^(a+)+$", includeExported: true);
+
+        AssertProblem(result, ProblemTypes.BadRequest, 400, "filterRegex value timed out");
+    }
+
     [Theory]
     [InlineData("", "1.0.0", "net8.0", "Package name is required")]
+    [InlineData(".", "1.0.0", "net8.0", "Package name contains path segments")]
+    [InlineData("..", "1.0.0", "net8.0", "Package name contains path segments")]
     [InlineData("Package/Name", "1.0.0", "net8.0", "Package name contains characters")]
     [InlineData("Package.Name", "", "net8.0", "Package version is required")]
     [InlineData("Package.Name", "1.0.0", "", "Target framework is required")]
