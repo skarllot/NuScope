@@ -25,6 +25,7 @@
 ## GitHub workflow
 - Use Conventional Commits for commit messages and pull request titles.
 - Write pull request descriptions in Markdown.
+- Ask to bump version for branch if not already.
 
 ## Style and tests
 - Formatting is CSharpier via the restored local tool; CI runs `dotnet csharpier check .`.

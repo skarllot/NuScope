@@ -2,6 +2,7 @@ namespace Raiqub.NuScope.Features.Common.Models;
 
 public static class ProblemTypes
 {
+    public const string BadRequest = "https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request";
     public const string Forbidden = "https://www.rfc-editor.org/rfc/rfc9110.html#name-403-forbidden";
     public const string InternalServerError =
         "https://www.rfc-editor.org/rfc/rfc9110.html#name-500-internal-server-error";
