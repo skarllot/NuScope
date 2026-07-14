@@ -11,7 +11,7 @@
     <PackageVersion Include="MessagePack" Version="3.1.8" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageVersion Include="ModelContextProtocol" Version="1.4.1" />
-    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.85" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.10.91" />
     <PackageVersion Include="NuGet.Frameworks" Version="7.6.0" />
     <PackageVersion Include="TestableIO.System.IO.Abstractions.TestingHelpers" Version="22.1.1" />
     <PackageVersion Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.1.1" />
