@@ -22,7 +22,11 @@ public sealed class NuGetTypeApiReaderTests
                 public class TypeApiFixture<T> where T : class, new()
                 {
                     public const int Answer = 42;
+                    static TypeApiFixture() { }
+                    public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     protected string Name { get; }
                     public event System.EventHandler Changed;
                 }
@@ -47,7 +51,11 @@ public sealed class NuGetTypeApiReaderTests
                 {
                     public const int Answer = 42;
                     private int secret;
+                    static TypeApiFixture() { }
+                    public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     internal int GetSecret() { }
                     protected string Name { get; private set; }
                     public event System.EventHandler Changed;

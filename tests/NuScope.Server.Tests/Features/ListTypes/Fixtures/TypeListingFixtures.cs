@@ -27,6 +27,8 @@ public class TypeApiFixture<T>
 
     private int secret;
 
+    static TypeApiFixture() { }
+
     public TypeApiFixture() { }
 
     protected string Name { get; private set; } = string.Empty;
@@ -38,6 +40,10 @@ public class TypeApiFixture<T>
         Changed?.Invoke(this, EventArgs.Empty);
         secret = value;
     }
+
+    public static TypeApiFixture<T> operator +(TypeApiFixture<T> left, TypeApiFixture<T> right) => left;
+
+    public static implicit operator string(TypeApiFixture<T> value) => value.Name;
 
     internal int GetSecret() => secret;
 }

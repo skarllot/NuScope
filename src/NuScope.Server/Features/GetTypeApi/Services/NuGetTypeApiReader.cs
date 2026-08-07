@@ -249,14 +249,16 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             {
                 var method = reader.GetMethodDefinition(handle);
                 var name = reader.GetString(method.Name);
+                var isConstructor = name is ".ctor" or ".cctor";
+                var isOperator = name.StartsWith("op_", StringComparison.Ordinal);
                 if (
-                    name == ".cctor"
-                    || (
+                    (
                         (method.Attributes & MethodAttributes.SpecialName) != 0
-                        && !name.StartsWith("op_", StringComparison.Ordinal)
+                        && !isConstructor
+                        && !isOperator
                     )
                     || HasCompilerGeneratedAttribute(method.GetCustomAttributes())
-                    || !ShouldInclude(method.Attributes)
+                    || (name != ".cctor" && !ShouldInclude(method.Attributes))
                 )
                 {
                     continue;
@@ -265,15 +267,19 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 var methodContext = CreateGenericContext(type.GetGenericParameters(), method.GetGenericParameters());
                 var signature = method.DecodeSignature(typeNameProvider, methodContext);
                 AppendIndent(builder, indent);
-                if (!isInterface)
+                if (!isInterface && name != ".cctor")
                 {
                     builder.Append(GetMethodVisibility(method.Attributes));
                 }
 
                 AppendMethodModifiers(builder, method.Attributes, isInterface);
-                if (name == ".ctor")
+                if (isConstructor)
                 {
                     builder.Append(RemoveGenericArity(reader.GetString(type.Name)));
+                }
+                else if (name is "op_Implicit" or "op_Explicit")
+                {
+                    builder.Append(GetMethodName(name)).Append(' ').Append(signature.ReturnType);
                 }
                 else
                 {
