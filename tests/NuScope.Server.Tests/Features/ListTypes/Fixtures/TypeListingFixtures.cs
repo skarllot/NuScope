@@ -45,7 +45,15 @@ public class TypeApiFixture<T>
 
     public static TypeApiFixture<T> operator +(TypeApiFixture<T> left, TypeApiFixture<T> right) => left;
 
+    public static TypeApiFixture<T> operator -(TypeApiFixture<T> left, TypeApiFixture<T> right) => left;
+
+    public static TypeApiFixture<T> operator *(TypeApiFixture<T> left, TypeApiFixture<T> right) => left;
+
+    public static TypeApiFixture<T> operator /(TypeApiFixture<T> left, TypeApiFixture<T> right) => left;
+
     public static implicit operator string(TypeApiFixture<T> value) => value.Name;
+
+    public static explicit operator int(TypeApiFixture<T> value) => value.secret;
 
     internal int GetSecret() => secret;
 }

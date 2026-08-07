@@ -26,7 +26,11 @@ public sealed class NuGetTypeApiReaderTests
                     public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
                     public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
+                    public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     protected string Name { get; }
                     public event System.EventHandler Changed;
                 }
@@ -55,7 +59,11 @@ public sealed class NuGetTypeApiReaderTests
                     public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
                     public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
+                    public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     internal int GetSecret() { }
                     protected string Name { get; private set; }
                     public event System.EventHandler Changed;
@@ -229,6 +237,80 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     [Fact]
+    public void ReadTypeApiRendersSealedClassAndNestedClass()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public sealed class PublicClassFixture
+                {
+                    public PublicClassFixture() { }
+                    public sealed class PublicNested
+                    {
+                        public PublicNested() { }
+                    }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(PublicClassFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiHidesInternalTopLevelTypeByDefault()
+    {
+        using var stream = File.OpenRead(typeof(TypeApiFixture<>).Assembly.Location);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            "Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.InternalTypeFixture",
+            includePrivate: false
+        );
+
+        Assert.Null(api);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersInternalTopLevelTypeWhenRequested()
+    {
+        using var stream = File.OpenRead(typeof(TypeApiFixture<>).Assembly.Location);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            "Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.InternalTypeFixture",
+            includePrivate: true
+        );
+
+        Assert.NotNull(api);
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                internal sealed class InternalTypeFixture
+                {
+                    internal InternalTypeFixture() { }
+                }
+            }
+            """;
+
+        Assert.Equal(NormalizeLineBreaks(expected + Environment.NewLine), NormalizeLineBreaks(api));
+    }
+
+    [Fact]
+    public void ReadTypeApiCopiesNonSeekableStreamBeforeReading()
+    {
+        using var file = File.OpenRead(typeof(ApiStructFixture).Assembly.Location);
+        using var stream = new NonSeekableReadStream(file);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            typeof(ApiStructFixture).FullName!,
+            includePrivate: false
+        );
+
+        Assert.NotNull(api);
+    }
+
+    [Fact]
     public void ReadTypeApiRendersPublicNestedTypes()
     {
         var expected = """
@@ -308,4 +390,31 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     private static string NormalizeLineBreaks(string value) => value.ReplaceLineEndings("\n");
+
+    private sealed class NonSeekableReadStream(Stream inner) : Stream
+    {
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override void Flush() { }
+
+        public override int Read(byte[] buffer, int offset, int count) => inner.Read(buffer, offset, count);
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
 }
