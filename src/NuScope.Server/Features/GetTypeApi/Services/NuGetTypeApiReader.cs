@@ -531,7 +531,8 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 }
 
                 constraints.AddRange(
-                    parameter.GetConstraints()
+                    parameter
+                        .GetConstraints()
                         .Select(constraintHandle => reader.GetGenericParameterConstraint(constraintHandle))
                         .Select(constraint => GetEntityTypeName(constraint.Type, context))
                         .OfType<string>()
