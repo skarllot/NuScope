@@ -37,9 +37,7 @@ public sealed class NuGetPackageTypeApiServiceTests
     )
     {
         var service = new NuGetPackageTypeApiService(
-            new StubAssetResolver(
-                NuGetPackageAssetsLookup.Found([], NuGetPackageAssetSource.Local)
-            ),
+            new StubAssetResolver(NuGetPackageAssetsLookup.Found([], NuGetPackageAssetSource.Local)),
             new StubTypeApiReader(null)
         );
 

@@ -27,13 +27,7 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
             bool includePrivate = false
     )
     {
-        var result = typeApiService.GetTypeApi(
-            packageName,
-            version,
-            targetFramework,
-            fullTypeName,
-            includePrivate
-        );
+        var result = typeApiService.GetTypeApi(packageName, version, targetFramework, fullTypeName, includePrivate);
         return result.Problem is not null ? result.Problem : result.Result!;
     }
 }

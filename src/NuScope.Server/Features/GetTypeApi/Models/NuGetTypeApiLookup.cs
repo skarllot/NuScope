@@ -9,7 +9,10 @@ public sealed record NuGetTypeApiLookup
     public NuGetProblemDetailsResult? Problem { get; init; }
 
     public static NuGetTypeApiLookup Found(string assembly, string api) =>
-        new() { Result = new NuGetTypeApiResult { Assembly = assembly, Api = api } };
+        new()
+        {
+            Result = new NuGetTypeApiResult { Assembly = assembly, Api = api },
+        };
 
     public static NuGetTypeApiLookup FromProblem(NuGetProblemDetailsResult problem) => new() { Problem = problem };
 }

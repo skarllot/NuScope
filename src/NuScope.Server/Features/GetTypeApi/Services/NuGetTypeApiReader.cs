@@ -167,9 +167,9 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 baseType is not null
                 && baseType
                     is not "System.Object"
-                    and not "System.ValueType"
-                    and not "System.Enum"
-                    and not "System.MulticastDelegate"
+                        and not "System.ValueType"
+                        and not "System.Enum"
+                        and not "System.MulticastDelegate"
             )
             {
                 baseTypes.Add(baseType);
