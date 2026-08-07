@@ -252,11 +252,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 var isConstructor = name is ".ctor" or ".cctor";
                 var isOperator = name.StartsWith("op_", StringComparison.Ordinal);
                 if (
-                    (
-                        (method.Attributes & MethodAttributes.SpecialName) != 0
-                        && !isConstructor
-                        && !isOperator
-                    )
+                    ((method.Attributes & MethodAttributes.SpecialName) != 0 && !isConstructor && !isOperator)
                     || HasCompilerGeneratedAttribute(method.GetCustomAttributes())
                     || (name != ".cctor" && !ShouldInclude(method.Attributes))
                 )
