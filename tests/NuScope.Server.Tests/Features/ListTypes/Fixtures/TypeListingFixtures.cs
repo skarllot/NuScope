@@ -125,8 +125,8 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     private event EventHandler Hidden
     {
-        add { }
-        remove { }
+        add => state++;
+        remove => state--;
     }
 
     public abstract int Transform<TInput>(in int value, TInput input)
