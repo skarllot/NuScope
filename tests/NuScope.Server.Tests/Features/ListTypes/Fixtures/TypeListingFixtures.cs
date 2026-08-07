@@ -81,7 +81,7 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     public static readonly int Shared;
 
-    protected internal readonly T Item;
+    protected internal readonly T StoredItem;
 
     private protected int state;
 
@@ -89,12 +89,12 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     protected ApiShapeFixture(T item)
     {
-        Item = item;
+        StoredItem = item;
     }
 
     private ApiShapeFixture()
     {
-        Item = default!;
+        StoredItem = default!;
     }
 
     public abstract int Value { get; set; }

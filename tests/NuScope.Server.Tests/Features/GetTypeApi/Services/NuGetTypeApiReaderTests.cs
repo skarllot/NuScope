@@ -89,7 +89,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const string Text = "a\\\"b";
                     public const object Nothing = null;
                     public static readonly int Shared;
-                    protected internal readonly T Item;
+                    protected internal readonly T StoredItem;
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
@@ -137,7 +137,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const string Text = "a\\\"b";
                     public const object Nothing = null;
                     public static readonly int Shared;
-                    protected internal readonly T Item;
+                    protected internal readonly T StoredItem;
                     private protected int state;
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }
