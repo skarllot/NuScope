@@ -941,6 +941,5 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
 internal static class StringBuilderExtensions
 {
-    public static StringBuilder AppendIndent(this StringBuilder builder, int indent) =>
-        builder.Append(' ', indent * 4);
+    public static StringBuilder AppendIndent(this StringBuilder builder, int indent) => builder.Append(' ', indent * 4);
 }
