@@ -16,13 +16,21 @@ public sealed class NuGetTypeApiReaderTests
         var api = new NuGetTypeApiReader().ReadTypeApi(stream, TypeName, includePrivate: false);
 
         Assert.NotNull(api);
-        Assert.Contains("namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures", api);
-        Assert.Contains("public class TypeApiFixture<T> where T : class, new()", api);
-        Assert.Contains("public const int Answer = 42;", api);
-        Assert.Contains("protected string Name { get; }", api);
-        Assert.Contains("public void Transform(ref int value, string text = \"value\") { }", api);
-        Assert.DoesNotContain("secret", api);
-        Assert.DoesNotContain("GetSecret", api);
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public class TypeApiFixture<T> where T : class, new()
+                {
+                    public const int Answer = 42;
+                    public TypeApiFixture() { }
+                    public void Transform(ref int value, string text = "value") { }
+                    protected string Name { get; }
+                    public event System.EventHandler Changed;
+                }
+            }
+            """;
+
+        Assert.Equal(NormalizeLineBreaks(expected + Environment.NewLine), NormalizeLineBreaks(api));
     }
 
     [Fact]
@@ -33,9 +41,23 @@ public sealed class NuGetTypeApiReaderTests
         var api = new NuGetTypeApiReader().ReadTypeApi(stream, TypeName, includePrivate: true);
 
         Assert.NotNull(api);
-        Assert.Contains("private int secret;", api);
-        Assert.Contains("internal int GetSecret() { }", api);
-        Assert.Contains("protected string Name { get; private set; }", api);
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public class TypeApiFixture<T> where T : class, new()
+                {
+                    public const int Answer = 42;
+                    private int secret;
+                    public TypeApiFixture() { }
+                    public void Transform(ref int value, string text = "value") { }
+                    internal int GetSecret() { }
+                    protected string Name { get; private set; }
+                    public event System.EventHandler Changed;
+                }
+            }
+            """;
+
+        Assert.Equal(NormalizeLineBreaks(expected + Environment.NewLine), NormalizeLineBreaks(api));
     }
 
     [Fact]
@@ -47,4 +69,6 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.Null(api);
     }
+
+    private static string NormalizeLineBreaks(string value) => value.ReplaceLineEndings("\n");
 }
