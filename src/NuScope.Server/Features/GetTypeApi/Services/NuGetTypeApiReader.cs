@@ -451,7 +451,8 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             ImmutableArray<string> parameterTypes
         )
         {
-            var parameterNames = method.GetParameters()
+            var parameterNames = method
+                .GetParameters()
                 .Select(handle => reader.GetParameter(handle))
                 .Where(parameter => parameter.SequenceNumber > 0)
                 .ToDictionary(parameter => parameter.SequenceNumber - 1);
