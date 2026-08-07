@@ -1,6 +1,7 @@
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using Raiqub.NuScope.Features.Common.Models;
+using Raiqub.NuScope.Features.GetTypeApi.Models;
 using Raiqub.NuScope.Features.GetTypeApi.Services;
 using Raiqub.NuScope.Features.GetTypeApi.Tools;
 using Xunit;
