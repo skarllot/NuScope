@@ -93,18 +93,18 @@ public sealed class NuGetTypeApiReaderTests
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
-                    public virtual void Update(out int result, ref string text, int optional = 3) { }
+                    public virtual void Update(out int result, ref string text, int count = 3) { }
                     protected static T[] CreateItems() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     public abstract event System.EventHandler Changed;
-                    public interface PublicNested
+                    public interface IPublicNested
                     {
                     }
-                    protected interface ProtectedNested
+                    protected interface IProtectedNested
                     {
                     }
-                    protected internal interface ProtectedInternalNested
+                    protected internal interface IProtectedInternalNested
                     {
                     }
                 }
@@ -144,27 +144,27 @@ public sealed class NuGetTypeApiReaderTests
                     protected ApiShapeFixture(T item) { }
                     private ApiShapeFixture() { }
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
-                    public virtual void Update(out int result, ref string text, int optional = 3) { }
+                    public virtual void Update(out int result, ref string text, int count = 3) { }
                     protected static T[] CreateItems() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     public abstract event System.EventHandler Changed;
-                    public interface PublicNested
+                    public interface IPublicNested
                     {
                     }
-                    protected interface ProtectedNested
+                    protected interface IProtectedNested
                     {
                     }
-                    protected internal interface ProtectedInternalNested
+                    protected internal interface IProtectedInternalNested
                     {
                     }
-                    private protected interface PrivateProtectedNested
+                    private protected interface IPrivateProtectedNested
                     {
                     }
-                    internal interface InternalNested
+                    internal interface IInternalNested
                     {
                     }
-                    private interface PrivateNested
+                    private interface IPrivateNested
                     {
                     }
                 }
@@ -198,10 +198,9 @@ public sealed class NuGetTypeApiReaderTests
         var expected = """
             namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
             {
-                public struct ApiStructFixture : System.IEquatable<Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiStructFixture>
+                public struct ApiStructFixture
                 {
                     public ApiStructFixture(int value) { }
-                    public bool Equals(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiStructFixture other) { }
                     public int Value { get; }
                 }
             }

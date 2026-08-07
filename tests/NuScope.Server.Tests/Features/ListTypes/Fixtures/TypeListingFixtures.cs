@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures;
 
 public sealed class PublicClassFixture
@@ -103,7 +105,7 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     public virtual string this[int index]
     {
-        get => index.ToString();
+        get => index.ToString(CultureInfo.InvariantCulture);
         protected set { }
     }
 
@@ -112,32 +114,30 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     public abstract int Transform<TInput>(in int value, TInput input)
         where TInput : class, new();
 
-    public virtual void Update(out int result, ref string text, int optional = 3)
+    public virtual void Update(out int result, ref string text, int count = 3)
     {
         result = state;
-        text = optional.ToString();
+        text = count.ToString(CultureInfo.InvariantCulture);
     }
 
     protected static T[] CreateItems() => [];
 
-    public interface PublicNested;
+    public interface IPublicNested;
 
-    protected interface ProtectedNested;
+    protected interface IProtectedNested;
 
-    protected internal interface ProtectedInternalNested;
+    protected internal interface IProtectedInternalNested;
 
-    private protected interface PrivateProtectedNested;
+    private protected interface IPrivateProtectedNested;
 
-    internal interface InternalNested;
+    internal interface IInternalNested;
 
-    private interface PrivateNested;
+    private interface IPrivateNested;
 }
 
-public readonly struct ApiStructFixture(int value) : IEquatable<ApiStructFixture>
+public readonly struct ApiStructFixture(int value)
 {
     public int Value { get; } = value;
-
-    public bool Equals(ApiStructFixture other) => Value == other.Value;
 }
 
 public enum ApiEnumFixture : short
