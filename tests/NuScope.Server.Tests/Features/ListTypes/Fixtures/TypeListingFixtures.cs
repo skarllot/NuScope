@@ -22,6 +22,10 @@ public delegate void PublicDelegateFixture();
 
 internal sealed class InternalTypeFixture;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design",
+    "CA1046:Do not overload operator equals on reference types"
+)]
 public class TypeApiFixture<T>
     where T : class, new()
 {
@@ -54,6 +58,15 @@ public class TypeApiFixture<T>
     public static implicit operator string(TypeApiFixture<T> value) => value.Name;
 
     public static explicit operator int(TypeApiFixture<T> value) => value.secret;
+
+    public static bool operator ==(TypeApiFixture<T>? left, TypeApiFixture<T>? right) =>
+        ReferenceEquals(left, right);
+
+    public static bool operator !=(TypeApiFixture<T>? left, TypeApiFixture<T>? right) => !(left == right);
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj);
+
+    public override int GetHashCode() => base.GetHashCode();
 
     internal int GetSecret() => secret;
 }
@@ -120,6 +133,18 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     }
 
     private int HiddenValue { get; set; }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1044:Properties should not be write only")]
+    public int WriteOnly
+    {
+        set => state = value;
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Performance",
+        "CA1814:Prefer jagged arrays over multidimensional"
+    )]
+    public int[,] Matrix { get; } = new int[1, 1];
 
     public abstract event EventHandler Changed;
 

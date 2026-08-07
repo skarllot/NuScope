@@ -31,6 +31,10 @@ public sealed class NuGetTypeApiReaderTests
                     public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public virtual bool Equals(object obj) { }
+                    public virtual int GetHashCode() { }
                     protected string Name { get; }
                     public event System.EventHandler Changed;
                 }
@@ -64,6 +68,10 @@ public sealed class NuGetTypeApiReaderTests
                     public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value) { }
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right) { }
+                    public virtual bool Equals(object obj) { }
+                    public virtual int GetHashCode() { }
                     internal int GetSecret() { }
                     protected string Name { get; private set; }
                     public event System.EventHandler Changed;
@@ -105,6 +113,8 @@ public sealed class NuGetTypeApiReaderTests
                     protected static T[] CreateItems() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
+                    public int WriteOnly { set; }
+                    public int[,] Matrix { get; }
                     public abstract event System.EventHandler Changed;
                 }
             }
@@ -149,6 +159,8 @@ public sealed class NuGetTypeApiReaderTests
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     private int HiddenValue { get; set; }
+                    public int WriteOnly { set; }
+                    public int[,] Matrix { get; }
                     public abstract event System.EventHandler Changed;
                     private event System.EventHandler Hidden;
                 }
