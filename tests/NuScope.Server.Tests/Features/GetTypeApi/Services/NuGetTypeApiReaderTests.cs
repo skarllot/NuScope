@@ -22,7 +22,6 @@ public sealed class NuGetTypeApiReaderTests
                 public class TypeApiFixture<T> where T : class, new()
                 {
                     public const int Answer = 42;
-                    public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
                     protected string Name { get; }
                     public event System.EventHandler Changed;
@@ -48,7 +47,6 @@ public sealed class NuGetTypeApiReaderTests
                 {
                     public const int Answer = 42;
                     private int secret;
-                    public TypeApiFixture() { }
                     public void Transform(ref int value, string text = "value") { }
                     internal int GetSecret() { }
                     protected string Name { get; private set; }
