@@ -78,18 +78,18 @@ public sealed class NuGetTypeApiReaderTests
                     public const char Character = 'A';
                     public const sbyte SignedByte = -1;
                     public const byte Byte = 2;
-                    public const short Short = -3;
+                    public const short Signed16Value = -3;
                     public const ushort UnsignedShort = 4;
-                    public const int Integer = -5;
+                    public const int Signed32Value = -5;
                     public const uint UnsignedInteger = 6;
-                    public const long Long = -7;
+                    public const long Signed64Value = -7;
                     public const ulong UnsignedLong = 8;
-                    public const float Single = 1.5;
-                    public const double Double = 2.5;
+                    public const float Real32Value = 1.5;
+                    public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
                     public const object Nothing = null;
                     public static readonly int Shared;
-                    protected internal readonly T StoredItem;
+                    protected internal const int ProtectedValue = 9;
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
@@ -126,18 +126,19 @@ public sealed class NuGetTypeApiReaderTests
                     public const char Character = 'A';
                     public const sbyte SignedByte = -1;
                     public const byte Byte = 2;
-                    public const short Short = -3;
+                    public const short Signed16Value = -3;
                     public const ushort UnsignedShort = 4;
-                    public const int Integer = -5;
+                    public const int Signed32Value = -5;
                     public const uint UnsignedInteger = 6;
-                    public const long Long = -7;
+                    public const long Signed64Value = -7;
                     public const ulong UnsignedLong = 8;
-                    public const float Single = 1.5;
-                    public const double Double = 2.5;
+                    public const float Real32Value = 1.5;
+                    public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
                     public const object Nothing = null;
                     public static readonly int Shared;
-                    protected internal readonly T StoredItem;
+                    protected internal const int ProtectedValue = 9;
+                    private readonly T storedItem;
                     private protected int state;
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }

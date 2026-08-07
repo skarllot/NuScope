@@ -39,7 +39,7 @@ public sealed class NuGetPackageTypeApiServiceTests
     {
         var service = new NuGetPackageTypeApiService(
             new StubAssetResolver(NuGetPackageAssetsLookup.Found([], NuGetPackageAssetSource.Local)),
-            new StubTypeApiReader(null)
+            new StubTypeApiReader((string?)null)
         );
 
         var result = service.GetTypeApi(packageName, version, targetFramework, fullTypeName);
@@ -56,7 +56,7 @@ public sealed class NuGetPackageTypeApiServiceTests
                 NuGetPackageAssetSource.Local
             )
         );
-        var service = new NuGetPackageTypeApiService(resolver, new StubTypeApiReader(null));
+        var service = new NuGetPackageTypeApiService(resolver, new StubTypeApiReader((string?)null));
 
         var result = service.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Missing.Type");
 
@@ -69,7 +69,7 @@ public sealed class NuGetPackageTypeApiServiceTests
         var problem = NuGetProblemDetailsResult.Forbidden("Package access was denied.");
         var service = new NuGetPackageTypeApiService(
             new StubAssetResolver(NuGetPackageAssetsLookup.FromProblem(problem, NuGetPackageAssetSource.Remote)),
-            new StubTypeApiReader(null)
+            new StubTypeApiReader((string?)null)
         );
 
         var result = service.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type");
@@ -82,7 +82,7 @@ public sealed class NuGetPackageTypeApiServiceTests
     {
         var service = new NuGetPackageTypeApiService(
             new StubAssetResolver(NuGetPackageAssetsLookup.Found([], NuGetPackageAssetSource.Local)),
-            new StubTypeApiReader(null)
+            new StubTypeApiReader((string?)null)
         );
 
         var result = service.GetTypeApi("Package/Name", "1.0.0", "net8.0", "Example.Type");

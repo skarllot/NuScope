@@ -68,20 +68,22 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     public const char Character = 'A';
     public const sbyte SignedByte = -1;
     public const byte Byte = 2;
-    public const short Short = -3;
+    public const short Signed16Value = -3;
     public const ushort UnsignedShort = 4;
-    public const int Integer = -5;
+    public const int Signed32Value = -5;
     public const uint UnsignedInteger = 6;
-    public const long Long = -7;
+    public const long Signed64Value = -7;
     public const ulong UnsignedLong = 8;
-    public const float Single = 1.5F;
-    public const double Double = 2.5D;
+    public const float Real32Value = 1.5F;
+    public const double Real64Value = 2.5D;
     public const string Text = "a\\\"b";
     public const object? Nothing = null;
 
     public static readonly int Shared;
 
-    protected internal readonly T StoredItem;
+    protected internal const int ProtectedValue = 9;
+
+    private readonly T storedItem;
 
     private protected int state;
 
@@ -89,12 +91,12 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     protected ApiShapeFixture(T item)
     {
-        StoredItem = item;
+        storedItem = item;
     }
 
     private ApiShapeFixture()
     {
-        StoredItem = default!;
+        storedItem = default!;
     }
 
     public abstract int Value { get; set; }
