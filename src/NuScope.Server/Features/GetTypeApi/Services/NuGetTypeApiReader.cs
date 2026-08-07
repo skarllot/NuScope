@@ -639,12 +639,16 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         private bool ShouldInclude(MethodAttributes attributes) =>
             includePrivate
             || (attributes & MethodAttributes.MemberAccessMask)
-                is MethodAttributes.Public or MethodAttributes.Family or MethodAttributes.FamORAssem;
+                is MethodAttributes.Public
+                    or MethodAttributes.Family
+                    or MethodAttributes.FamORAssem;
 
         private bool ShouldInclude(FieldAttributes attributes) =>
             includePrivate
             || (attributes & FieldAttributes.FieldAccessMask)
-                is FieldAttributes.Public or FieldAttributes.Family or FieldAttributes.FamORAssem;
+                is FieldAttributes.Public
+                    or FieldAttributes.Family
+                    or FieldAttributes.FamORAssem;
 
         private bool HasCompilerGeneratedAttribute(CustomAttributeHandleCollection handles)
         {
