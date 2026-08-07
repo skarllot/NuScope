@@ -522,12 +522,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             {
                 var parameter = reader.GetGenericParameter(handle);
                 var constraints = new List<string>();
+                var hasValueTypeConstraint =
+                    (parameter.Attributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0;
                 if ((parameter.Attributes & GenericParameterAttributes.ReferenceTypeConstraint) != 0)
                 {
                     constraints.Add("class");
                 }
 
-                if ((parameter.Attributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0)
+                if (hasValueTypeConstraint)
                 {
                     constraints.Add("struct");
                 }
@@ -540,7 +542,10 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                         .OfType<string>()
                         .Where(constraint => constraint != "System.ValueType")
                 );
-                if ((parameter.Attributes & GenericParameterAttributes.DefaultConstructorConstraint) != 0)
+                if (
+                    !hasValueTypeConstraint
+                    && (parameter.Attributes & GenericParameterAttributes.DefaultConstructorConstraint) != 0
+                )
                 {
                     constraints.Add("new()");
                 }

@@ -122,17 +122,6 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     protected static T[] CreateItems() => [];
 
-    public interface IPublicNested;
-
-    protected interface IProtectedNested;
-
-    protected internal interface IProtectedInternalNested;
-
-    private protected interface IPrivateProtectedNested;
-
-    internal interface IInternalNested;
-
-    private interface IHiddenNested;
 }
 
 public readonly struct ApiStructFixture(int value)
@@ -153,4 +142,21 @@ public delegate TResult ApiDelegateFixture<in T, out TResult>(T value)
 public static class ApiStaticFixture
 {
     public static int Value { get; set; }
+}
+
+public class ApiNestedFixture
+{
+    public ApiNestedFixture() { }
+
+    public interface IPublicNested;
+
+    protected interface IProtectedNested;
+
+    protected internal interface IProtectedInternalNested;
+
+    private protected interface IPrivateProtectedNested;
+
+    internal interface IInternalNested;
+
+    private interface IHiddenNested;
 }

@@ -98,15 +98,6 @@ public sealed class NuGetTypeApiReaderTests
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     public abstract event System.EventHandler Changed;
-                    public interface IPublicNested
-                    {
-                    }
-                    protected interface IProtectedNested
-                    {
-                    }
-                    protected internal interface IProtectedInternalNested
-                    {
-                    }
                 }
             }
             """;
@@ -149,24 +140,6 @@ public sealed class NuGetTypeApiReaderTests
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     public abstract event System.EventHandler Changed;
-                    public interface IPublicNested
-                    {
-                    }
-                    protected interface IProtectedNested
-                    {
-                    }
-                    protected internal interface IProtectedInternalNested
-                    {
-                    }
-                    private protected interface IPrivateProtectedNested
-                    {
-                    }
-                    internal interface IInternalNested
-                    {
-                    }
-                    private interface IHiddenNested
-                    {
-                    }
                 }
             }
             """;
@@ -253,6 +226,65 @@ public sealed class NuGetTypeApiReaderTests
             """;
 
         AssertTypeApi(typeof(ApiStaticFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersPublicNestedTypes()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public class ApiNestedFixture
+                {
+                    public ApiNestedFixture() { }
+                    public interface IPublicNested
+                    {
+                    }
+                    protected interface IProtectedNested
+                    {
+                    }
+                    protected internal interface IProtectedInternalNested
+                    {
+                    }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiNestedFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersPrivateNestedTypes()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public class ApiNestedFixture
+                {
+                    public ApiNestedFixture() { }
+                    public interface IPublicNested
+                    {
+                    }
+                    protected interface IProtectedNested
+                    {
+                    }
+                    protected internal interface IProtectedInternalNested
+                    {
+                    }
+                    private protected interface IPrivateProtectedNested
+                    {
+                    }
+                    internal interface IInternalNested
+                    {
+                    }
+                    private interface IHiddenNested
+                    {
+                    }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiNestedFixture), expected, includePrivate: true);
     }
 
     [Fact]
