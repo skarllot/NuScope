@@ -287,7 +287,7 @@ public sealed class NuGetTypeApiReaderTests
             {
                 internal sealed class InternalTypeFixture
                 {
-                    internal InternalTypeFixture() { }
+                    public InternalTypeFixture() { }
                 }
             }
             """;
