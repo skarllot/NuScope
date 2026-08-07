@@ -121,7 +121,6 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     }
 
     protected static T[] CreateItems() => [];
-
 }
 
 public readonly struct ApiStructFixture(int value)
