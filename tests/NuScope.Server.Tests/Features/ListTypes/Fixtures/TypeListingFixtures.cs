@@ -99,7 +99,11 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     public abstract int Value { get; set; }
 
-    public virtual string this[int index] { get => index.ToString(); protected set { } }
+    public virtual string this[int index]
+    {
+        get => index.ToString();
+        protected set { }
+    }
 
     public abstract event EventHandler Changed;
 

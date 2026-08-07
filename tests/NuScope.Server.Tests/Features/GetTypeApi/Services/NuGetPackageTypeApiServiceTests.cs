@@ -103,17 +103,19 @@ public sealed class NuGetPackageTypeApiServiceTests
                 NuGetPackageAssetSource.Local
             )
         );
-        var reader = new StubTypeApiReader((stream, fullTypeName, includePrivate) =>
-        {
-            Assert.Equal("Example.Type", fullTypeName);
-            Assert.True(includePrivate);
-            if (stream.ReadByte() == 0)
+        var reader = new StubTypeApiReader(
+            (stream, fullTypeName, includePrivate) =>
             {
-                throw new BadImageFormatException();
-            }
+                Assert.Equal("Example.Type", fullTypeName);
+                Assert.True(includePrivate);
+                if (stream.ReadByte() == 0)
+                {
+                    throw new BadImageFormatException();
+                }
 
-            return "public class Example { }";
-        });
+                return "public class Example { }";
+            }
+        );
         var service = new NuGetPackageTypeApiService(resolver, reader);
 
         var result = service.GetTypeApi(
