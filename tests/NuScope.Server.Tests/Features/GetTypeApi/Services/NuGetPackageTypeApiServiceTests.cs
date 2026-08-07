@@ -64,8 +64,7 @@ public sealed class NuGetPackageTypeApiServiceTests
 
     private sealed class StubAssetResolver(NuGetPackageAssetsLookup result) : INuGetPackageAssetResolver
     {
-        public NuGetPackageAssetsLookup GetAssets(string packageName, string version, string targetFramework) =>
-            result;
+        public NuGetPackageAssetsLookup GetAssets(string packageName, string version, string targetFramework) => result;
     }
 
     private sealed class StubTypeApiReader(string? result) : INuGetTypeApiReader

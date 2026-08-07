@@ -191,12 +191,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             }
         }
 
-        private void RenderFields(
-            StringBuilder builder,
-            TypeDefinition type,
-            GenericContext context,
-            int indent
-        )
+        private void RenderFields(StringBuilder builder, TypeDefinition type, GenericContext context, int indent)
         {
             foreach (var handle in type.GetFields())
             {
