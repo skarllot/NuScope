@@ -118,13 +118,7 @@ public sealed class NuGetPackageTypeApiServiceTests
         );
         var service = new NuGetPackageTypeApiService(resolver, reader);
 
-        var result = service.GetTypeApi(
-            "Example.Package",
-            "1.0.0",
-            "net8.0",
-            "Example.Type",
-            includePrivate: true
-        );
+        var result = service.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type", includePrivate: true);
 
         Assert.Null(result.Problem);
         Assert.Equal("lib/net8.0/Managed.dll", result.Result!.Assembly);
