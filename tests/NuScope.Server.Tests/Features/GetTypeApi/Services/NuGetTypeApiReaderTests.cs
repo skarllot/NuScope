@@ -67,6 +67,195 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     [Fact]
+    public void ReadTypeApiRendersSupportedClassMembers()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.IApiContractFixture<int> where T : class, new()
+                {
+                    public const bool Boolean = true;
+                    public const char Character = 'A';
+                    public const sbyte SignedByte = -1;
+                    public const byte Byte = 2;
+                    public const short Short = -3;
+                    public const ushort UnsignedShort = 4;
+                    public const int Integer = -5;
+                    public const uint UnsignedInteger = 6;
+                    public const long Long = -7;
+                    public const ulong UnsignedLong = 8;
+                    public const float Single = 1.5;
+                    public const double Double = 2.5;
+                    public const string Text = "a\\\"b";
+                    public const object Nothing = null;
+                    public static readonly int Shared;
+                    protected internal readonly T Item;
+                    static ApiShapeFixture() { }
+                    protected ApiShapeFixture(T item) { }
+                    public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
+                    public virtual void Update(out int result, ref string text, int optional = 3) { }
+                    protected static T[] CreateItems() { }
+                    public abstract int Value { get; set; }
+                    public virtual string this[int arg0] { get; protected set; }
+                    public abstract event System.EventHandler Changed;
+                    public interface PublicNested
+                    {
+                    }
+                    protected interface ProtectedNested
+                    {
+                    }
+                    protected internal interface ProtectedInternalNested
+                    {
+                    }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiShapeFixture<>), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersPrivateClassMembers()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.IApiContractFixture<int> where T : class, new()
+                {
+                    public const bool Boolean = true;
+                    public const char Character = 'A';
+                    public const sbyte SignedByte = -1;
+                    public const byte Byte = 2;
+                    public const short Short = -3;
+                    public const ushort UnsignedShort = 4;
+                    public const int Integer = -5;
+                    public const uint UnsignedInteger = 6;
+                    public const long Long = -7;
+                    public const ulong UnsignedLong = 8;
+                    public const float Single = 1.5;
+                    public const double Double = 2.5;
+                    public const string Text = "a\\\"b";
+                    public const object Nothing = null;
+                    public static readonly int Shared;
+                    protected internal readonly T Item;
+                    private protected int state;
+                    static ApiShapeFixture() { }
+                    protected ApiShapeFixture(T item) { }
+                    private ApiShapeFixture() { }
+                    public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
+                    public virtual void Update(out int result, ref string text, int optional = 3) { }
+                    protected static T[] CreateItems() { }
+                    public abstract int Value { get; set; }
+                    public virtual string this[int arg0] { get; protected set; }
+                    public abstract event System.EventHandler Changed;
+                    public interface PublicNested
+                    {
+                    }
+                    protected interface ProtectedNested
+                    {
+                    }
+                    protected internal interface ProtectedInternalNested
+                    {
+                    }
+                    private protected interface PrivateProtectedNested
+                    {
+                    }
+                    internal interface InternalNested
+                    {
+                    }
+                    private interface PrivateNested
+                    {
+                    }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiShapeFixture<>), expected, includePrivate: true);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersInterface()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public interface IApiContractFixture<T> where T : struct
+                {
+                    T Transform<TInput>(in T value, TInput input) where TInput : class, new() { }
+                    T Value { get; set; }
+                    event System.EventHandler Changed;
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(IApiContractFixture<>), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersStruct()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public struct ApiStructFixture : System.IEquatable<Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiStructFixture>
+                {
+                    public ApiStructFixture(int value) { }
+                    public bool Equals(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiStructFixture other) { }
+                    public int Value { get; }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiStructFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersEnum()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public enum ApiEnumFixture
+                {
+                    None = -1,
+                    One = 1,
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiEnumFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersDelegate()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class;
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiDelegateFixture<,>), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersStaticClass()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public static class ApiStaticFixture
+                {
+                    public static int Value { get; set; }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiStaticFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
     public void ReadTypeApiReturnsNullWhenTypeDoesNotExist()
     {
         using var stream = File.OpenRead(typeof(TypeApiFixture<>).Assembly.Location);
@@ -74,6 +263,16 @@ public sealed class NuGetTypeApiReaderTests
         var api = new NuGetTypeApiReader().ReadTypeApi(stream, "Missing.Type", includePrivate: false);
 
         Assert.Null(api);
+    }
+
+    private static void AssertTypeApi(Type type, string expected, bool includePrivate)
+    {
+        using var stream = File.OpenRead(type.Assembly.Location);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(stream, type.FullName!, includePrivate);
+
+        Assert.NotNull(api);
+        Assert.Equal(NormalizeLineBreaks(expected + Environment.NewLine), NormalizeLineBreaks(api));
     }
 
     private static string NormalizeLineBreaks(string value) => value.ReplaceLineEndings("\n");
