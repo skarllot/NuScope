@@ -56,8 +56,7 @@ public class TypeApiFixture<T>
 
     public static explicit operator int(TypeApiFixture<T> value) => value.secret;
 
-    public static bool operator ==(TypeApiFixture<T>? left, TypeApiFixture<T>? right) =>
-        ReferenceEquals(left, right);
+    public static bool operator ==(TypeApiFixture<T>? left, TypeApiFixture<T>? right) => ReferenceEquals(left, right);
 
     public static bool operator !=(TypeApiFixture<T>? left, TypeApiFixture<T>? right) => !(left == right);
 
