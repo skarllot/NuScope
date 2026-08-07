@@ -22,10 +22,7 @@ public delegate void PublicDelegateFixture();
 
 internal sealed class InternalTypeFixture;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage(
-    "Design",
-    "CA1046:Do not overload operator equals on reference types"
-)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1046:Do not overload operator equals on reference types")]
 public class TypeApiFixture<T>
     where T : class, new()
 {
