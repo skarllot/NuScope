@@ -137,6 +137,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const object Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
+                    internal static int Mutable;
                     private readonly T storedItem;
                     private protected int state;
                     static ApiShapeFixture() { }
@@ -147,7 +148,9 @@ public sealed class NuGetTypeApiReaderTests
                     protected static T[] CreateItems() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
+                    private int HiddenValue { get; set; }
                     public abstract event System.EventHandler Changed;
+                    private event System.EventHandler Hidden;
                 }
             }
             """;
@@ -234,6 +237,19 @@ public sealed class NuGetTypeApiReaderTests
             """;
 
         AssertTypeApi(typeof(ApiStaticFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersTypeWithoutNamespace()
+    {
+        var expected = """
+            public sealed class GlobalApiFixture
+            {
+                public GlobalApiFixture() { }
+            }
+            """;
+
+        AssertTypeApi(typeof(GlobalApiFixture), expected, includePrivate: false);
     }
 
     [Fact]

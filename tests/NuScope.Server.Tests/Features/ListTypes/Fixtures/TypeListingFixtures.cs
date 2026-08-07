@@ -93,6 +93,8 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     protected internal const int ProtectedValue = 9;
 
+    internal static int Mutable = 1;
+
     private readonly T storedItem;
 
     private protected int state;
@@ -117,7 +119,15 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
         protected set { }
     }
 
+    private int HiddenValue { get; set; }
+
     public abstract event EventHandler Changed;
+
+    private event EventHandler Hidden
+    {
+        add { }
+        remove { }
+    }
 
     public abstract int Transform<TInput>(in int value, TInput input)
         where TInput : class, new();
