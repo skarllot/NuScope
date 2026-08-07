@@ -164,7 +164,7 @@ public sealed class NuGetTypeApiReaderTests
                     internal interface IInternalNested
                     {
                     }
-                    private interface IPrivateNested
+                    private interface IHiddenNested
                     {
                     }
                 }

@@ -132,7 +132,7 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     internal interface IInternalNested;
 
-    private interface IPrivateNested;
+    private interface IHiddenNested;
 }
 
 public readonly struct ApiStructFixture(int value)

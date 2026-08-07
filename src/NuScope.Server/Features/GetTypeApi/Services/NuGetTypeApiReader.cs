@@ -574,6 +574,11 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
         private string? GetEntityTypeName(EntityHandle handle, GenericContext context)
         {
+            if (handle.IsNil)
+            {
+                return null;
+            }
+
             return handle.Kind switch
             {
                 HandleKind.TypeDefinition => typeNameProvider.GetTypeFromDefinition(
