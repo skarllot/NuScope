@@ -21,10 +21,7 @@ public sealed class NuGetGetTypeApiToolTests
         var resource = Assert.IsType<TextResourceContents>(result.Resource);
         Assert.Equal("nuget://packages/Example.Package/1.0.0/net8.0/Example.Type.cs", resource.Uri);
         Assert.Equal("text/x-csharp", resource.MimeType);
-        Assert.Equal(
-            $"// Assembly: lib/net8.0/Example.dll{Environment.NewLine}public class Type {{ }}",
-            resource.Text
-        );
+        Assert.Equal($"// Assembly: lib/net8.0/Example.dll{Environment.NewLine}public class Type {{ }}", resource.Text);
     }
 
     [Fact]
