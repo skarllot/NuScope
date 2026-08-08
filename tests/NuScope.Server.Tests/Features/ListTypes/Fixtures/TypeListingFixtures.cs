@@ -148,7 +148,7 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     public nuint NativeUInt { get; }
 
-    public unsafe int* Pointer { get; }
+    public unsafe int* Address { get; }
 
     public unsafe delegate* <int, void> Callback { get; }
 

@@ -119,7 +119,7 @@ public sealed class NuGetTypeApiReaderTests
                     public int[,] Matrix { get; }
                     public nint NativeInt { get; }
                     public nuint NativeUInt { get; }
-                    public int* Pointer { get; }
+                    public int* Address { get; }
                     public delegate* Callback { get; }
                     public System.Environment.SpecialFolder SpecialFolder { get; }
                     protected internal int ProtectedInternalProperty { get; private protected set; }
@@ -175,7 +175,7 @@ public sealed class NuGetTypeApiReaderTests
                     public int[,] Matrix { get; }
                     public nint NativeInt { get; }
                     public nuint NativeUInt { get; }
-                    public int* Pointer { get; }
+                    public int* Address { get; }
                     public delegate* Callback { get; }
                     public System.Environment.SpecialFolder SpecialFolder { get; }
                     protected internal int ProtectedInternalProperty { get; private protected set; }
