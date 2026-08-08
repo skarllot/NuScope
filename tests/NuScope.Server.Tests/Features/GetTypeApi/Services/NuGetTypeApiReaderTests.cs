@@ -122,7 +122,7 @@ public sealed class NuGetTypeApiReaderTests
                     public int* Address { get; }
                     public delegate* Callback { get; }
                     public System.Environment.SpecialFolder SpecialFolder { get; }
-                    protected internal int ProtectedInternalProperty { get; private protected set; }
+                    protected internal int ProtectedInternalProperty { get; }
                     public abstract event System.EventHandler Changed;
                 }
             }
