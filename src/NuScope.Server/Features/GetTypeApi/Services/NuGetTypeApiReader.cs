@@ -308,7 +308,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
                 AppendParameters(builder, method, signature.ParameterTypes);
                 AppendGenericConstraints(builder, method.GetGenericParameters(), methodContext);
-                builder.AppendLine(" { }");
+                builder.AppendLine(";");
             }
         }
 
