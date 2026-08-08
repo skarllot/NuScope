@@ -106,15 +106,23 @@ public sealed class NuGetTypeApiReaderTests
                     public const object Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
+                    protected const int ProtectedOnly = 10;
                     static ApiShapeFixture() { }
                     protected ApiShapeFixture(T item) { }
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
                     public virtual void Update(out int result, ref string text, int count = 3) { }
                     protected static T[] CreateItems() { }
+                    protected internal void ProtectedInternalMethod() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     public int WriteOnly { set; }
                     public int[,] Matrix { get; }
+                    public nint NativeInt { get; }
+                    public nuint NativeUInt { get; }
+                    public int* Pointer { get; }
+                    public delegate* Callback { get; }
+                    public System.Environment.SpecialFolder SpecialFolder { get; }
+                    protected internal int ProtectedInternalProperty { get; private protected set; }
                     public abstract event System.EventHandler Changed;
                 }
             }
@@ -147,6 +155,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const object Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
+                    protected const int ProtectedOnly = 10;
                     internal static int Mutable;
                     private readonly T storedItem;
                     private protected int state;
@@ -156,11 +165,21 @@ public sealed class NuGetTypeApiReaderTests
                     public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new() { }
                     public virtual void Update(out int result, ref string text, int count = 3) { }
                     protected static T[] CreateItems() { }
+                    protected internal void ProtectedInternalMethod() { }
+                    private protected void PrivateProtectedMethod() { }
+                    private void PrivateMethod() { }
                     public abstract int Value { get; set; }
                     public virtual string this[int arg0] { get; protected set; }
                     private int HiddenValue { get; set; }
                     public int WriteOnly { set; }
                     public int[,] Matrix { get; }
+                    public nint NativeInt { get; }
+                    public nuint NativeUInt { get; }
+                    public int* Pointer { get; }
+                    public delegate* Callback { get; }
+                    public System.Environment.SpecialFolder SpecialFolder { get; }
+                    protected internal int ProtectedInternalProperty { get; private protected set; }
+                    internal int InternalProperty { get; private set; }
                     public abstract event System.EventHandler Changed;
                     private event System.EventHandler Hidden;
                 }
@@ -228,7 +247,7 @@ public sealed class NuGetTypeApiReaderTests
         var expected = """
             namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
             {
-                public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class;
+                public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, System.IDisposable;
             }
             """;
 

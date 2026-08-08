@@ -102,6 +102,8 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     protected internal const int ProtectedValue = 9;
 
+    protected const int ProtectedOnly = 10;
+
     internal static int Mutable = 1;
 
     private readonly T storedItem;
@@ -142,6 +144,20 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     )]
     public int[,] Matrix { get; } = new int[1, 1];
 
+    public nint NativeInt { get; }
+
+    public nuint NativeUInt { get; }
+
+    public unsafe int* Pointer { get; }
+
+    public unsafe delegate*<int, void> Callback { get; }
+
+    public Environment.SpecialFolder SpecialFolder { get; }
+
+    protected internal int ProtectedInternalProperty { get; private protected set; }
+
+    internal int InternalProperty { get; private set; }
+
     public abstract event EventHandler Changed;
 
     private event EventHandler Hidden
@@ -160,6 +176,12 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
     }
 
     protected static T[] CreateItems() => [];
+
+    protected internal void ProtectedInternalMethod() => state++;
+
+    private protected void PrivateProtectedMethod() => state--;
+
+    private void PrivateMethod() => state = 0;
 }
 
 public readonly struct ApiStructFixture(int value)
@@ -175,7 +197,7 @@ public enum ApiEnumFixture : short
 
 public delegate TResult ApiDelegateFixture<in T, out TResult>(T value)
     where T : class
-    where TResult : class;
+    where TResult : class, IDisposable;
 
 public static class ApiStaticFixture
 {
