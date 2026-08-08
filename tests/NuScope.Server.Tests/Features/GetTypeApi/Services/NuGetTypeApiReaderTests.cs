@@ -33,8 +33,8 @@ public sealed class NuGetTypeApiReaderTests
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
                     public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
                     public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public virtual bool Equals(object obj);
-                    public virtual int GetHashCode();
+                    public override bool Equals(object obj);
+                    public override int GetHashCode();
                     protected string Name { get; }
                     public event System.EventHandler Changed;
                 }
@@ -70,8 +70,8 @@ public sealed class NuGetTypeApiReaderTests
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
                     public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
                     public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public virtual bool Equals(object obj);
-                    public virtual int GetHashCode();
+                    public override bool Equals(object obj);
+                    public override int GetHashCode();
                     internal int GetSecret();
                     protected string Name { get; private set; }
                     public event System.EventHandler Changed;
@@ -305,6 +305,86 @@ public sealed class NuGetTypeApiReaderTests
             """;
 
         AssertTypeApi(typeof(PublicClassFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersVirtualOverrideAndSealedOverrideMethods()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiMethodModifierBaseFixture
+                {
+                    public sealed override void VirtualMethod();
+                    public override int OverrideMethod();
+                    public ApiMethodModifierDerivedFixture();
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiMethodModifierDerivedFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersAbstractClass()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public abstract class ApiAbstractClassFixture
+                {
+                    protected ApiAbstractClassFixture();
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiAbstractClassFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersSealedClass()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            {
+                public sealed class ApiSealedClassFixture
+                {
+                    public ApiSealedClassFixture();
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiSealedClassFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersAbstractRecordDeclaration()
+    {
+        using var stream = File.OpenRead(typeof(ApiAbstractRecordFixture).Assembly.Location);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            typeof(ApiAbstractRecordFixture).FullName!,
+            includePrivate: false
+        );
+
+        Assert.NotNull(api);
+        Assert.Contains("public abstract record ApiAbstractRecordFixture", api, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadTypeApiRendersSealedRecordDeclaration()
+    {
+        using var stream = File.OpenRead(typeof(ApiSealedRecordFixture).Assembly.Location);
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            typeof(ApiSealedRecordFixture).FullName!,
+            includePrivate: false
+        );
+
+        Assert.NotNull(api);
+        Assert.Contains("public sealed record ApiSealedRecordFixture", api, StringComparison.Ordinal);
     }
 
     [Fact]

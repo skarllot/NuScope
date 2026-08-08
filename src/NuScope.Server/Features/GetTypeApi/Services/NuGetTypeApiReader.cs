@@ -124,20 +124,22 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
             AppendIndent(builder, indent);
             builder.Append(GetTypeVisibility(type.Attributes));
-            if (kind == "class")
+            if (kind is "class" or "record")
             {
-                if ((type.Attributes & TypeAttributes.Abstract) != 0 && (type.Attributes & TypeAttributes.Sealed) != 0)
+                var isAbstract = (type.Attributes & TypeAttributes.Abstract) != 0;
+                var isSealed = (type.Attributes & TypeAttributes.Sealed) != 0;
+                if (kind == "class" && isAbstract && isSealed)
                 {
                     builder.Append("static ");
                 }
                 else
                 {
-                    if ((type.Attributes & TypeAttributes.Abstract) != 0)
+                    if (isAbstract)
                     {
                         builder.Append("abstract ");
                     }
 
-                    if ((type.Attributes & TypeAttributes.Sealed) != 0)
+                    if (isSealed)
                     {
                         builder.Append("sealed ");
                     }
@@ -761,7 +763,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     .ToImmutableArray()
             );
 
-        private static string GetTypeKind(TypeDefinition type, string? baseType)
+        private string GetTypeKind(TypeDefinition type, string? baseType)
         {
             if ((type.Attributes & TypeAttributes.Interface) != 0)
             {
@@ -773,8 +775,36 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 "System.Enum" => "enum",
                 "System.MulticastDelegate" => "delegate",
                 "System.ValueType" => "struct",
-                _ => "class",
+                _ => IsRecord(type) ? "record" : "class",
             };
+        }
+
+        private bool IsRecord(TypeDefinition type)
+        {
+            var hasCloneMethod = false;
+            foreach (var methodHandle in type.GetMethods())
+            {
+                if (reader.GetString(reader.GetMethodDefinition(methodHandle).Name) == "<Clone>$")
+                {
+                    hasCloneMethod = true;
+                    break;
+                }
+            }
+
+            if (!hasCloneMethod)
+            {
+                return false;
+            }
+
+            foreach (var propertyHandle in type.GetProperties())
+            {
+                if (reader.GetString(reader.GetPropertyDefinition(propertyHandle).Name) == "EqualityContract")
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string GetTypeVisibility(TypeAttributes attributes) =>
@@ -828,15 +858,30 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 builder.Append("static ");
             }
 
-            if (!isInterface && (attributes & MethodAttributes.Abstract) != 0)
+            if (isInterface)
+            {
+                return;
+            }
+
+            var isAbstract = (attributes & MethodAttributes.Abstract) != 0;
+            var isVirtual = (attributes & MethodAttributes.Virtual) != 0;
+            var isOverride = isVirtual && (attributes & MethodAttributes.NewSlot) == 0;
+            var isSealedOverride = isOverride && (attributes & MethodAttributes.Final) != 0;
+            if (isAbstract)
             {
                 builder.Append("abstract ");
             }
-            else if (
-                !isInterface
-                && (attributes & MethodAttributes.Virtual) != 0
-                && (attributes & MethodAttributes.Final) == 0
-            )
+
+            if (isSealedOverride)
+            {
+                builder.Append("sealed ");
+            }
+
+            if (isOverride)
+            {
+                builder.Append("override ");
+            }
+            else if (isVirtual && !isAbstract && (attributes & MethodAttributes.Final) == 0)
             {
                 builder.Append("virtual ");
             }

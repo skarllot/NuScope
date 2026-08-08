@@ -67,6 +67,28 @@ public class TypeApiFixture<T>
     internal int GetSecret() => secret;
 }
 
+public class ApiMethodModifierBaseFixture
+{
+    public virtual void VirtualMethod() { }
+
+    public virtual int OverrideMethod() => 1;
+}
+
+public class ApiMethodModifierDerivedFixture : ApiMethodModifierBaseFixture
+{
+    public sealed override void VirtualMethod() { }
+
+    public override int OverrideMethod() => 2;
+}
+
+public abstract class ApiAbstractClassFixture;
+
+public sealed class ApiSealedClassFixture;
+
+public abstract record ApiAbstractRecordFixture;
+
+public sealed record ApiSealedRecordFixture;
+
 public abstract class ApiBaseFixture;
 
 public interface IApiContractFixture<T>
