@@ -92,6 +92,7 @@ public sealed class NuGetTypeApiReaderTests
                 {
                     public const bool Boolean = true;
                     public const char Character = 'A';
+                    public const char Apostrophe = '\'';
                     public const sbyte SignedByte = -1;
                     public const byte Byte = 2;
                     public const short Signed16Value = -3;
@@ -103,6 +104,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const float Real32Value = 1.5;
                     public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
+                    public const string Multiline = "a\\r\\nb";
                     public const object Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
@@ -141,6 +143,7 @@ public sealed class NuGetTypeApiReaderTests
                 {
                     public const bool Boolean = true;
                     public const char Character = 'A';
+                    public const char Apostrophe = '\'';
                     public const sbyte SignedByte = -1;
                     public const byte Byte = 2;
                     public const short Signed16Value = -3;
@@ -152,6 +155,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const float Real32Value = 1.5;
                     public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
+                    public const string Multiline = "a\\r\\nb";
                     public const object Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
