@@ -173,6 +173,19 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         )
         {
             var baseTypes = new List<string>();
+            if (kind == "enum")
+            {
+                var underlyingType = type.GetFields()
+                    .Select(handle => reader.GetFieldDefinition(handle))
+                    .Where(field => string.Equals(reader.GetString(field.Name), "value__", StringComparison.Ordinal))
+                    .Select(field => field.DecodeSignature(typeNameProvider, context))
+                    .FirstOrDefault();
+                if (underlyingType is not null and not "int" and not "System.Int32")
+                {
+                    baseTypes.Add(underlyingType);
+                }
+            }
+
             if (
                 baseType is not null
                 && baseType

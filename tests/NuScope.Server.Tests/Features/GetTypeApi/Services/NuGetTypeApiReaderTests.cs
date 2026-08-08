@@ -230,7 +230,7 @@ public sealed class NuGetTypeApiReaderTests
         var expected = """
             namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
             {
-                public enum ApiEnumFixture
+                public enum ApiEnumFixture : short
                 {
                     None = -1,
                     One = 1,
