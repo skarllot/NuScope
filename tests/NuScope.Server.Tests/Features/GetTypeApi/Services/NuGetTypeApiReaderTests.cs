@@ -1,12 +1,12 @@
 using Raiqub.NuScope.Features.GetTypeApi.Services;
-using Raiqub.NuScope.Tests.Features.ListTypes.Fixtures;
+using Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 using Xunit;
 
 namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Services;
 
 public sealed class NuGetTypeApiReaderTests
 {
-    private const string TypeName = "Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture`1";
+    private const string TypeName = "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture`1";
 
     [Fact]
     public void ReadTypeApiReturnsPublicApiInCSharpDeclarationFormat()
@@ -17,7 +17,7 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public class TypeApiFixture<T> where T : class, new()
                 {
@@ -25,14 +25,14 @@ public sealed class NuGetTypeApiReaderTests
                     static TypeApiFixture();
                     public TypeApiFixture();
                     public void Transform(ref int value, string text = "value");
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
-                    public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                    public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
                     public override bool Equals(object obj);
                     public override int GetHashCode();
                     protected string Name { get; }
@@ -53,7 +53,7 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public class TypeApiFixture<T> where T : class, new()
                 {
@@ -62,14 +62,14 @@ public sealed class NuGetTypeApiReaderTests
                     static TypeApiFixture();
                     public TypeApiFixture();
                     public void Transform(ref int value, string text = "value");
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static implicit operator string(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
-                    public static explicit operator int(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                    public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
                     public override bool Equals(object obj);
                     public override int GetHashCode();
                     internal int GetSecret();
@@ -86,9 +86,9 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSupportedClassMembers()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
-                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.IApiContractFixture<int> where T : class, new()
+                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
                 {
                     public const bool Boolean = true;
                     public const char Character = 'A';
@@ -137,9 +137,9 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateClassMembers()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
-                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.IApiContractFixture<int> where T : class, new()
+                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
                 {
                     public const bool Boolean = true;
                     public const char Character = 'A';
@@ -197,7 +197,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersInterface()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public interface IApiContractFixture<T> where T : struct
                 {
@@ -215,7 +215,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStruct()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public struct ApiStructFixture
                 {
@@ -232,7 +232,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersEnum()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public enum ApiEnumFixture : short
                 {
@@ -249,7 +249,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersDelegate()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, System.IDisposable;
             }
@@ -262,7 +262,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStaticClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public static class ApiStaticFixture
                 {
@@ -291,7 +291,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClassAndNestedClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public sealed class PublicClassFixture
                 {
@@ -311,9 +311,9 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersVirtualOverrideAndSealedOverrideMethods()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
-                public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.ApiMethodModifierBaseFixture
+                public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiMethodModifierBaseFixture
                 {
                     public sealed override void VirtualMethod();
                     public override int OverrideMethod();
@@ -329,7 +329,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersAbstractClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public abstract class ApiAbstractClassFixture
                 {
@@ -345,7 +345,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public sealed class ApiSealedClassFixture
                 {
@@ -394,7 +394,7 @@ public sealed class NuGetTypeApiReaderTests
 
         var api = new NuGetTypeApiReader().ReadTypeApi(
             stream,
-            "Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.InternalTypeFixture",
+            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.InternalTypeFixture",
             includePrivate: false
         );
 
@@ -408,13 +408,13 @@ public sealed class NuGetTypeApiReaderTests
 
         var api = new NuGetTypeApiReader().ReadTypeApi(
             stream,
-            "Raiqub.NuScope.Tests.Features.ListTypes.Fixtures.InternalTypeFixture",
+            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.InternalTypeFixture",
             includePrivate: true
         );
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 internal sealed class InternalTypeFixture
                 {
@@ -463,7 +463,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPublicNestedTypes()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public class ApiNestedFixture
                 {
@@ -488,7 +488,7 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateNestedTypes()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.ListTypes.Fixtures
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
                 public class ApiNestedFixture
                 {
