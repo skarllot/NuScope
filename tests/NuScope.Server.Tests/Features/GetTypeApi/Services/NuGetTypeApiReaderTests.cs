@@ -293,9 +293,9 @@ public sealed class NuGetTypeApiReaderTests
         var expected = """
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
-                public sealed class PublicClassFixture
+                public sealed class TypeApiPublicSample
                 {
-                    public PublicClassFixture();
+                    public TypeApiPublicSample();
                     public sealed class PublicNested
                     {
                         public PublicNested();
@@ -304,7 +304,7 @@ public sealed class NuGetTypeApiReaderTests
             }
             """;
 
-        AssertTypeApi(typeof(PublicClassFixture), expected, includePrivate: false);
+        AssertTypeApi(typeof(TypeApiPublicSample), expected, includePrivate: false);
     }
 
     [Fact]
@@ -394,7 +394,7 @@ public sealed class NuGetTypeApiReaderTests
 
         var api = new NuGetTypeApiReader().ReadTypeApi(
             stream,
-            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.InternalTypeFixture",
+            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiHiddenSample",
             includePrivate: false
         );
 
@@ -408,7 +408,7 @@ public sealed class NuGetTypeApiReaderTests
 
         var api = new NuGetTypeApiReader().ReadTypeApi(
             stream,
-            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.InternalTypeFixture",
+            "Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiHiddenSample",
             includePrivate: true
         );
 
@@ -416,9 +416,9 @@ public sealed class NuGetTypeApiReaderTests
         var expected = """
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
             {
-                internal sealed class InternalTypeFixture
+                internal sealed class TypeApiHiddenSample
                 {
-                    public InternalTypeFixture();
+                    public TypeApiHiddenSample();
                 }
             }
             """;

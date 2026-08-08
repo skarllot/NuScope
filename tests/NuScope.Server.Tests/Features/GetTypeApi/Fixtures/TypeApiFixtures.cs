@@ -2,12 +2,12 @@ using System.Globalization;
 
 namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
-public sealed class PublicClassFixture
+public sealed class TypeApiPublicSample
 {
     public sealed class PublicNested { }
 }
 
-internal sealed class InternalTypeFixture;
+internal sealed class TypeApiHiddenSample;
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1046:Do not overload operator equals on reference types")]
 public class TypeApiFixture<T>
