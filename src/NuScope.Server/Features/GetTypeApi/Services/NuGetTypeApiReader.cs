@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Services;
 
@@ -727,10 +728,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             return constant.TypeCode switch
             {
                 ConstantTypeCode.Boolean => valueReader.ReadBoolean() ? "true" : "false",
-                ConstantTypeCode.Char => string.Create(
-                    CultureInfo.InvariantCulture,
-                    $"'{(char)valueReader.ReadUInt16()}'"
-                ),
+                ConstantTypeCode.Char => SymbolDisplay.FormatLiteral((char)valueReader.ReadUInt16(), quote: true),
                 ConstantTypeCode.SByte => valueReader.ReadSByte().ToString(CultureInfo.InvariantCulture),
                 ConstantTypeCode.Byte => valueReader.ReadByte().ToString(CultureInfo.InvariantCulture),
                 ConstantTypeCode.Int16 => valueReader.ReadInt16().ToString(CultureInfo.InvariantCulture),
@@ -741,17 +739,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 ConstantTypeCode.UInt64 => valueReader.ReadUInt64().ToString(CultureInfo.InvariantCulture),
                 ConstantTypeCode.Single => valueReader.ReadSingle().ToString("R", CultureInfo.InvariantCulture),
                 ConstantTypeCode.Double => valueReader.ReadDouble().ToString("R", CultureInfo.InvariantCulture),
-                ConstantTypeCode.String => string.Create(
-                    CultureInfo.InvariantCulture,
-                    $"\"{EscapeString(valueReader.ReadUTF16(valueReader.Length))}\""
+                ConstantTypeCode.String => SymbolDisplay.FormatLiteral(
+                    valueReader.ReadUTF16(valueReader.Length),
+                    quote: true
                 ),
                 ConstantTypeCode.NullReference => "null",
                 _ => null,
             };
         }
-
-        private static string EscapeString(string value) =>
-            value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
 
         private GenericContext CreateGenericContext(
             GenericParameterHandleCollection typeParameters,
