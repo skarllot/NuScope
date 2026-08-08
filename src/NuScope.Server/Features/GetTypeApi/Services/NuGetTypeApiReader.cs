@@ -907,7 +907,6 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             var index = name.IndexOf('`');
             return index < 0 ? name : name[..index];
         }
-
     }
 
     private readonly record struct GenericContext(
