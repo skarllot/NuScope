@@ -150,7 +150,7 @@ public abstract class ApiShapeFixture<T> : ApiBaseFixture, IApiContractFixture<i
 
     public unsafe int* Pointer { get; }
 
-    public unsafe delegate*<int, void> Callback { get; }
+    public unsafe delegate* <int, void> Callback { get; }
 
     public Environment.SpecialFolder SpecialFolder { get; }
 
