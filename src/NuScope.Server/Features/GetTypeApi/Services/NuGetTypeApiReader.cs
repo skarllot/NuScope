@@ -11,40 +11,50 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 {
     public string? ReadTypeApi(Stream stream, string fullTypeName, bool includePrivate)
     {
-        using var bufferedStream = GetSeekableStream(stream);
-        using var peReader = new PEReader(bufferedStream);
-        if (!peReader.HasMetadata)
+        var (bufferedStream, ownsBufferedStream) = GetSeekableStream(stream);
+        try
         {
-            throw new BadImageFormatException("Assembly does not contain metadata.");
-        }
-
-        var reader = peReader.GetMetadataReader();
-        foreach (var handle in reader.TypeDefinitions)
-        {
-            var type = reader.GetTypeDefinition(handle);
-            if (
-                string.Equals(GetFullName(reader, handle), fullTypeName, StringComparison.Ordinal)
-                && (includePrivate || IsPublicApi(type.Attributes))
-            )
+            using var peReader = new PEReader(bufferedStream, PEStreamOptions.LeaveOpen);
+            if (!peReader.HasMetadata)
             {
-                return new ApiRenderer(reader, includePrivate).Render(handle);
+                throw new BadImageFormatException("Assembly does not contain metadata.");
+            }
+
+            var reader = peReader.GetMetadataReader();
+            foreach (var handle in reader.TypeDefinitions)
+            {
+                var type = reader.GetTypeDefinition(handle);
+                if (
+                    string.Equals(GetFullName(reader, handle), fullTypeName, StringComparison.Ordinal)
+                    && (includePrivate || IsPublicApi(type.Attributes))
+                )
+                {
+                    return new ApiRenderer(reader, includePrivate).Render(handle);
+                }
+            }
+
+            return null;
+        }
+        finally
+        {
+            if (ownsBufferedStream)
+            {
+                bufferedStream.Dispose();
             }
         }
-
-        return null;
     }
 
-    private static Stream GetSeekableStream(Stream stream)
+    private static (Stream stream, bool ownsStream) GetSeekableStream(Stream stream)
     {
         if (stream.CanSeek)
         {
-            return stream;
+            return (stream, false);
         }
 
         var memoryStream = new MemoryStream();
         stream.CopyTo(memoryStream);
         memoryStream.Position = 0;
-        return memoryStream;
+        return (memoryStream, true);
     }
 
     private static bool IsPublicApi(TypeAttributes attributes)

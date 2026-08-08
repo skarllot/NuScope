@@ -358,6 +358,24 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     [Fact]
+    public void ReadTypeApiKeepsSeekableInputStreamOpen()
+    {
+        using var stream = File.OpenRead(typeof(ApiStructFixture).Assembly.Location);
+        var position = stream.Position;
+
+        var api = new NuGetTypeApiReader().ReadTypeApi(
+            stream,
+            typeof(ApiStructFixture).FullName!,
+            includePrivate: false
+        );
+
+        Assert.NotNull(api);
+        Assert.True(stream.CanRead);
+        stream.Position = position;
+        Assert.NotEqual(-1, stream.ReadByte());
+    }
+
+    [Fact]
     public void ReadTypeApiRendersPublicNestedTypes()
     {
         var expected = """
