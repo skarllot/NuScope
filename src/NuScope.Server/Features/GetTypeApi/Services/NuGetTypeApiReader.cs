@@ -5,6 +5,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp;
+using Raiqub.NuScope.Features.Common.Extensions;
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Services;
 
@@ -122,7 +123,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 return;
             }
 
-            AppendIndent(builder, indent);
+            builder.AppendIndent(indent);
             builder.Append(GetTypeVisibility(type.Attributes));
             if (kind is "class" or "record")
             {
@@ -231,7 +232,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     continue;
                 }
 
-                AppendIndent(builder, indent);
+                builder.AppendIndent(indent);
                 builder.Append(GetFieldVisibility(field.Attributes));
                 if ((field.Attributes & FieldAttributes.Literal) != 0)
                 {
@@ -288,7 +289,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
                 var methodContext = CreateGenericContext(type.GetGenericParameters(), method.GetGenericParameters());
                 var signature = method.DecodeSignature(typeNameProvider, methodContext);
-                AppendIndent(builder, indent);
+                builder.AppendIndent(indent);
                 if (!isInterface && name != ".cctor")
                 {
                     builder.Append(GetMethodVisibility(method.Attributes));
@@ -336,7 +337,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
                 var signature = property.DecodeSignature(typeNameProvider, context);
                 var representative = GetMostVisible(getter, setter);
-                AppendIndent(builder, indent);
+                builder.AppendIndent(indent);
                 if (!isInterface)
                 {
                     builder.Append(GetMethodVisibility(representative!.Value.Attributes));
@@ -390,7 +391,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     continue;
                 }
 
-                AppendIndent(builder, indent);
+                builder.AppendIndent(indent);
                 if (!isInterface)
                 {
                     builder.Append(GetMethodVisibility(representative.Value.Attributes));
@@ -433,7 +434,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     continue;
                 }
 
-                AppendIndent(builder, indent);
+                builder.AppendIndent(indent);
                 builder.Append(reader.GetString(field.Name));
                 var constant = GetConstant(field.GetDefaultValue());
                 if (constant is not null)
@@ -461,7 +462,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             }
 
             var signature = invoke.DecodeSignature(typeNameProvider, context);
-            AppendIndent(builder, indent);
+            builder.AppendIndent(indent);
             builder
                 .Append(GetTypeVisibility(type.Attributes))
                 .Append("delegate ")
@@ -907,7 +908,6 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             return index < 0 ? name : name[..index];
         }
 
-        private static void AppendIndent(StringBuilder builder, int indent) => builder.Append(' ', indent * 4);
     }
 
     private readonly record struct GenericContext(
@@ -1012,9 +1012,4 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             return index < 0 ? name : name[..index];
         }
     }
-}
-
-internal static class StringBuilderExtensions
-{
-    public static StringBuilder AppendIndent(this StringBuilder builder, int indent) => builder.Append(' ', indent * 4);
 }
