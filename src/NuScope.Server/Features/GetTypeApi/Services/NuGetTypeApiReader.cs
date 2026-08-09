@@ -105,8 +105,9 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             );
         }
 
-        return SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None
-                || SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None
+        return
+            SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None
+            || SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None
             ? string.Create(CultureInfo.InvariantCulture, $"@{identifier}")
             : identifier;
     }
@@ -641,9 +642,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
         private string GetTypeDeclarationName(TypeDefinition type)
         {
-            var builder = new StringBuilder(
-                FormatMetadataIdentifier(RemoveGenericArity(reader.GetString(type.Name)))
-            );
+            var builder = new StringBuilder(FormatMetadataIdentifier(RemoveGenericArity(reader.GetString(type.Name))));
             AppendGenericParameterList(builder, type.GetGenericParameters());
             return builder.ToString();
         }
@@ -801,10 +800,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         ) =>
             new(
                 typeParameters
-                    .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
+                    .Select(handle =>
+                        FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name))
+                    )
                     .ToImmutableArray(),
                 methodParameters
-                    .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
+                    .Select(handle =>
+                        FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name))
+                    )
                     .ToImmutableArray()
             );
 

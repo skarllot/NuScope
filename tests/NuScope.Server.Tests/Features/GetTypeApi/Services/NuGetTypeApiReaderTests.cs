@@ -315,9 +315,9 @@ public sealed class NuGetTypeApiReaderTests
             {
                 public class @event<@class> where @class : class
                 {
-                    public int @namespace;
-                    public @event();
                     public void @lock<@for>(@class @base, @for @while) where @for : @class;
+                    public @event();
+                    public int @namespace { get; set; }
                     public int @return { get; set; }
                     public event System.EventHandler @delegate;
                 }

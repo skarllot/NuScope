@@ -232,10 +232,20 @@ public class ApiNestedFixture
     private interface IHiddenNested;
 }
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Naming",
+    "CA1716:Identifiers should not match keywords",
+    Justification = "Fixture validates escaped keyword rendering."
+)]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Naming",
+    "CA1715:Identifiers should have correct prefix",
+    Justification = "Fixture validates escaped keyword rendering."
+)]
 public class @event<@class>
     where @class : class
 {
-    public int @namespace;
+    public int @namespace { get; set; }
 
     public int @return { get; set; }
 
@@ -245,5 +255,6 @@ public class @event<@class>
         where @for : @class
     {
         @namespace = 0;
+        @delegate?.Invoke(this, EventArgs.Empty);
     }
 }
