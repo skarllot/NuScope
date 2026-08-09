@@ -1,4 +1,3 @@
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.GetTypeApi.Models;
@@ -17,7 +16,9 @@ public sealed class NuGetGetTypeApiToolTests
             new StubTypeApiService(NuGetTypeApiLookup.Found("lib/net8.0/Example.dll", "public class Type { }"))
         );
 
-        var result = tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type");
+        var result = Assert.IsType<EmbeddedResourceBlock>(
+            tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type")
+        );
 
         var resource = Assert.IsType<TextResourceContents>(result.Resource);
         Assert.Equal("nuget://packages/Example.Package/1.0.0/net8.0/Example.Type.cs", resource.Uri);
@@ -26,16 +27,14 @@ public sealed class NuGetGetTypeApiToolTests
     }
 
     [Fact]
-    public void GetTypeApiThrowsMcpExceptionWhenServiceFails()
+    public void GetTypeApiReturnsProblemDetailsWhenServiceFails()
     {
         var problem = NuGetProblemDetailsResult.NotFound("Type was not found.");
         var tool = new NuGetGetTypeApiTool(new StubTypeApiService(NuGetTypeApiLookup.FromProblem(problem)));
 
-        var exception = Assert.Throws<McpException>(() =>
-            tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Missing.Type")
-        );
+        var result = tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Missing.Type");
 
-        Assert.Equal("Type was not found.", exception.Message);
+        Assert.Equal(problem, result);
     }
 
     private sealed class StubTypeApiService(NuGetTypeApiLookup result) : INuGetPackageTypeApiService

@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.GetTypeApi.Services;
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Tools;
@@ -17,7 +17,7 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
         OpenWorld = true
     )]
     [Description("Returns a C# API declaration for a type from a NuGet package assembly.")]
-    public EmbeddedResourceBlock GetTypeApi(
+    public object GetTypeApi(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The exact package version, for example '13.0.3'.")] string version,
         [Description("The target framework to resolve compatible lib or ref assets for, for example 'net8.0'.")]
@@ -31,7 +31,7 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
         var result = typeApiService.GetTypeApi(packageName, version, targetFramework, fullTypeName, includePrivate);
         if (result.Problem is not null)
         {
-            throw new McpException(result.Problem.Detail);
+            return result.Problem;
         }
 
         var typeApi = result.Result!;
