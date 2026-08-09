@@ -87,6 +87,46 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             : string.Create(CultureInfo.InvariantCulture, $"{@namespace}.{name}");
     }
 
+    private static string FormatMetadataIdentifier(string identifier)
+    {
+        if (string.IsNullOrEmpty(identifier))
+        {
+            return identifier;
+        }
+
+        var arityIndex = identifier.IndexOf('`');
+        if (arityIndex >= 0)
+        {
+            var unqualifiedName = identifier[..arityIndex];
+            var aritySuffix = identifier[arityIndex..];
+            return string.Create(
+                CultureInfo.InvariantCulture,
+                $"{FormatMetadataIdentifier(unqualifiedName)}{aritySuffix}"
+            );
+        }
+
+        return SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None
+                || SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None
+            ? string.Create(CultureInfo.InvariantCulture, $"@{identifier}")
+            : identifier;
+    }
+
+    private static string FormatQualifiedMetadataName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
+        var segments = name.Split('.');
+        for (var index = 0; index < segments.Length; index++)
+        {
+            segments[index] = FormatMetadataIdentifier(segments[index]);
+        }
+
+        return string.Join(".", segments);
+    }
+
     private sealed class ApiRenderer(MetadataReader reader, bool includePrivate)
     {
         private readonly SignatureTypeNameProvider typeNameProvider = new();
@@ -94,7 +134,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         public string Render(TypeDefinitionHandle handle)
         {
             var type = reader.GetTypeDefinition(handle);
-            var @namespace = reader.GetString(type.Namespace);
+            var @namespace = FormatQualifiedMetadataName(reader.GetString(type.Namespace));
             var builder = new StringBuilder();
             if (!string.IsNullOrEmpty(@namespace))
             {
@@ -254,7 +294,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 builder
                     .Append(field.DecodeSignature(typeNameProvider, context))
                     .Append(' ')
-                    .Append(reader.GetString(field.Name));
+                    .Append(FormatMetadataIdentifier(reader.GetString(field.Name)));
                 var constant = GetConstant(field.GetDefaultValue());
                 if (constant is not null)
                 {
@@ -298,7 +338,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 AppendMethodModifiers(builder, method.Attributes, isInterface);
                 if (isConstructor)
                 {
-                    builder.Append(RemoveGenericArity(reader.GetString(type.Name)));
+                    builder.Append(FormatMetadataIdentifier(RemoveGenericArity(reader.GetString(type.Name))));
                 }
                 else if (name is "op_Implicit" or "op_Explicit")
                 {
@@ -347,7 +387,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 builder.Append(signature.ReturnType).Append(' ');
                 if (signature.ParameterTypes.Length == 0)
                 {
-                    builder.Append(reader.GetString(property.Name));
+                    builder.Append(FormatMetadataIdentifier(reader.GetString(property.Name)));
                 }
                 else
                 {
@@ -402,7 +442,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     .Append("event ")
                     .Append(GetEntityTypeName(@event.Type, context))
                     .Append(' ')
-                    .Append(reader.GetString(@event.Name))
+                    .Append(FormatMetadataIdentifier(reader.GetString(@event.Name)))
                     .AppendLine(";");
             }
         }
@@ -435,7 +475,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 }
 
                 builder.AppendIndent(indent);
-                builder.Append(reader.GetString(field.Name));
+                builder.Append(FormatMetadataIdentifier(reader.GetString(field.Name)));
                 var constant = GetConstant(field.GetDefaultValue());
                 if (constant is not null)
                 {
@@ -514,7 +554,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 builder.Append(
                     parameter.Name.IsNil
                         ? string.Create(CultureInfo.InvariantCulture, $"arg{index}")
-                        : reader.GetString(parameter.Name)
+                        : FormatMetadataIdentifier(reader.GetString(parameter.Name))
                 );
                 var defaultValue = GetConstant(parameter.GetDefaultValue());
                 if (defaultValue is not null)
@@ -581,7 +621,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 {
                     builder
                         .Append(" where ")
-                        .Append(reader.GetString(parameter.Name))
+                        .Append(FormatMetadataIdentifier(reader.GetString(parameter.Name)))
                         .Append(" : ")
                         .AppendJoin(", ", constraints);
                 }
@@ -590,7 +630,9 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
         private void AppendGenericParameterList(StringBuilder builder, GenericParameterHandleCollection handles)
         {
-            var names = handles.Select(handle => reader.GetString(reader.GetGenericParameter(handle).Name)).ToArray();
+            var names = handles
+                .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
+                .ToArray();
             if (names.Length > 0)
             {
                 builder.Append('<').AppendJoin(", ", names).Append('>');
@@ -599,7 +641,9 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
         private string GetTypeDeclarationName(TypeDefinition type)
         {
-            var builder = new StringBuilder(RemoveGenericArity(reader.GetString(type.Name)));
+            var builder = new StringBuilder(
+                FormatMetadataIdentifier(RemoveGenericArity(reader.GetString(type.Name)))
+            );
             AppendGenericParameterList(builder, type.GetGenericParameters());
             return builder.ToString();
         }
@@ -757,10 +801,10 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         ) =>
             new(
                 typeParameters
-                    .Select(handle => reader.GetString(reader.GetGenericParameter(handle).Name))
+                    .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
                     .ToImmutableArray(),
                 methodParameters
-                    .Select(handle => reader.GetString(reader.GetGenericParameter(handle).Name))
+                    .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
                     .ToImmutableArray()
             );
 
@@ -899,7 +943,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 "op_Inequality" => "operator !=",
                 "op_Implicit" => "implicit operator",
                 "op_Explicit" => "explicit operator",
-                _ => metadataName,
+                _ => FormatMetadataIdentifier(metadataName),
             };
 
         private static string RemoveGenericArity(string name)
@@ -978,12 +1022,12 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             string.Create(CultureInfo.InvariantCulture, $"{elementType}[]");
 
         public string GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind) =>
-            GetFullName(reader, handle).Replace('+', '.');
+            FormatQualifiedMetadataName(GetFullName(reader, handle).Replace('+', '.'));
 
         public string GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
         {
             var type = reader.GetTypeReference(handle);
-            var name = reader.GetString(type.Name);
+            var name = FormatMetadataIdentifier(reader.GetString(type.Name));
             if (type.ResolutionScope.Kind == HandleKind.TypeReference)
             {
                 return string.Create(
@@ -992,7 +1036,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 );
             }
 
-            var @namespace = reader.GetString(type.Namespace);
+            var @namespace = FormatQualifiedMetadataName(reader.GetString(type.Namespace));
             return string.IsNullOrEmpty(@namespace)
                 ? name
                 : string.Create(CultureInfo.InvariantCulture, $"{@namespace}.{name}");

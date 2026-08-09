@@ -231,3 +231,19 @@ public class ApiNestedFixture
 
     private interface IHiddenNested;
 }
+
+public class @event<@class>
+    where @class : class
+{
+    public int @namespace;
+
+    public int @return { get; set; }
+
+    public event EventHandler? @delegate;
+
+    public void @lock<@for>(@class @base, @for @while)
+        where @for : @class
+    {
+        @namespace = 0;
+    }
+}

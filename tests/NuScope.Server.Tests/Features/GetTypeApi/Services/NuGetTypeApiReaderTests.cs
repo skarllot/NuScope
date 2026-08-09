@@ -308,6 +308,26 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     [Fact]
+    public void ReadTypeApiEscapesKeywordIdentifiers()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            {
+                public class @event<@class> where @class : class
+                {
+                    public int @namespace;
+                    public @event();
+                    public void @lock<@for>(@class @base, @for @while) where @for : @class;
+                    public int @return { get; set; }
+                    public event System.EventHandler @delegate;
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(@event<>), expected, includePrivate: false);
+    }
+
+    [Fact]
     public void ReadTypeApiRendersVirtualOverrideAndSealedOverrideMethods()
     {
         var expected = """
