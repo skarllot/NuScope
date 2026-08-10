@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ModelContextProtocol.Protocol;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.GetTypeApi.Models;
@@ -16,11 +17,13 @@ public sealed class NuGetGetTypeApiToolTests
             new StubTypeApiService(NuGetTypeApiLookup.Found("lib/net8.0/Example.dll", "public class Type { }"))
         );
 
-        var result = Assert.IsType<EmbeddedResourceBlock>(
-            tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type")
-        );
+        var result = tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Example.Type");
 
-        var resource = Assert.IsType<TextResourceContents>(result.Resource);
+        Assert.True(result.IsError != true);
+        Assert.Single(result.Content);
+        var content = Assert.IsType<EmbeddedResourceBlock>(result.Content[0]);
+
+        var resource = Assert.IsType<TextResourceContents>(content.Resource);
         Assert.Equal("nuget://packages/Example.Package/1.0.0/net8.0/Example.Type.cs", resource.Uri);
         Assert.Equal("text/x-csharp", resource.MimeType);
         Assert.Equal($"// Assembly: lib/net8.0/Example.dll{Environment.NewLine}public class Type {{ }}", resource.Text);
@@ -34,7 +37,9 @@ public sealed class NuGetGetTypeApiToolTests
 
         var result = tool.GetTypeApi("Example.Package", "1.0.0", "net8.0", "Missing.Type");
 
-        Assert.Equal(problem, result);
+        Assert.True(result.IsError);
+        Assert.NotNull(result.StructuredContent);
+        Assert.Equal(problem, result.StructuredContent.Value.Deserialize<NuGetProblemDetailsResult>());
     }
 
     private sealed class StubTypeApiService(NuGetTypeApiLookup result) : INuGetPackageTypeApiService

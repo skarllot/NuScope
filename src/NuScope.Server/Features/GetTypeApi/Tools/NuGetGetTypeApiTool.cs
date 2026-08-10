@@ -1,7 +1,7 @@
 using System.ComponentModel;
+using System.Text.Json;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.GetTypeApi.Services;
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Tools;
@@ -17,7 +17,7 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
         OpenWorld = true
     )]
     [Description("Returns a C# API declaration for a type from a NuGet package assembly.")]
-    public object GetTypeApi(
+    public CallToolResult GetTypeApi(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The exact package version, for example '13.0.3'.")] string version,
         [Description("The target framework to resolve compatible lib or ref assets for, for example 'net8.0'.")]
@@ -31,21 +31,32 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
         var result = typeApiService.GetTypeApi(packageName, version, targetFramework, fullTypeName, includePrivate);
         if (result.Problem is not null)
         {
-            return result.Problem;
+            return new CallToolResult
+            {
+                IsError = true,
+                Content = [new TextContentBlock { Text = result.Problem.Detail }],
+                StructuredContent = JsonSerializer.SerializeToElement(result.Problem),
+            };
         }
 
         var typeApi = result.Result!;
         var resourceUri =
             $"nuget://packages/{Uri.EscapeDataString(packageName)}/{Uri.EscapeDataString(version)}/{Uri.EscapeDataString(targetFramework)}/{Uri.EscapeDataString(fullTypeName)}.cs";
 
-        return new EmbeddedResourceBlock
+        return new CallToolResult
         {
-            Resource = new TextResourceContents
-            {
-                Uri = resourceUri,
-                MimeType = "text/x-csharp",
-                Text = $"// Assembly: {typeApi.Assembly}{Environment.NewLine}{typeApi.Api}",
-            },
+            Content =
+            [
+                new EmbeddedResourceBlock
+                {
+                    Resource = new TextResourceContents
+                    {
+                        Uri = resourceUri,
+                        MimeType = "text/x-csharp",
+                        Text = $"// Assembly: {typeApi.Assembly}{Environment.NewLine}{typeApi.Api}",
+                    },
+                },
+            ],
         };
     }
 }
