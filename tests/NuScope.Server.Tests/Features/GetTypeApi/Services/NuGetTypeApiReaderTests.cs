@@ -275,6 +275,23 @@ public sealed class NuGetTypeApiReaderTests
     }
 
     [Fact]
+    public void ReadTypeApiRendersInitOnlyProperty()
+    {
+        var expected = """
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            {
+                public class ApiInitOnlyFixture
+                {
+                    public ApiInitOnlyFixture();
+                    public string Name { get; init; }
+                }
+            }
+            """;
+
+        AssertTypeApi(typeof(ApiInitOnlyFixture), expected, includePrivate: false);
+    }
+
+    [Fact]
     public void ReadTypeApiRendersTypeWithoutNamespace()
     {
         var expected = """

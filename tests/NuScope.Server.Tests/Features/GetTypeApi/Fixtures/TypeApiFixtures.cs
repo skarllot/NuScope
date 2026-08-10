@@ -215,6 +215,11 @@ public static class ApiStaticFixture
     public static int Value { get; set; }
 }
 
+public class ApiInitOnlyFixture
+{
+    public string Name { get; init; } = string.Empty;
+}
+
 public class ApiNestedFixture
 {
     public ApiNestedFixture() { }

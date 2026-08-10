@@ -131,6 +131,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
     private sealed class ApiRenderer(MetadataReader reader, bool includePrivate)
     {
         private readonly SignatureTypeNameProvider typeNameProvider = new();
+        private readonly InitOnlyTypeNameProvider initOnlyTypeNameProvider = new();
 
         public string Render(TypeDefinitionHandle handle)
         {
@@ -405,7 +406,13 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
                 if (setter is not null)
                 {
-                    AppendAccessor(builder, "set", setter.Value, representative!.Value, isInterface);
+                    AppendAccessor(
+                        builder,
+                        IsInitOnlySetter(setter.Value) ? "init" : "set",
+                        setter.Value,
+                        representative!.Value,
+                        isInterface
+                    );
                 }
 
                 builder.AppendLine("}");
@@ -718,6 +725,12 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             builder.Append(keyword).Append("; ");
         }
 
+        private bool IsInitOnlySetter(MethodDefinition accessor)
+        {
+            var signature = accessor.DecodeSignature(initOnlyTypeNameProvider, GenericContext.Empty);
+            return signature.ReturnType.IsInitOnly;
+        }
+
         private bool ShouldInclude(MethodAttributes attributes) =>
             includePrivate
             || (attributes & MethodAttributes.MemberAccessMask)
@@ -964,6 +977,8 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         public static GenericContext Empty { get; } = new([], []);
     }
 
+    private readonly record struct InitOnlyTypeName(bool IsInitOnly);
+
     private sealed class SignatureTypeNameProvider : ISignatureTypeProvider<string, GenericContext>
     {
         public string GetArrayType(string elementType, ArrayShape shape) =>
@@ -1057,5 +1072,63 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
             var index = name.IndexOf('`');
             return index < 0 ? name : name[..index];
         }
+    }
+
+    private sealed class InitOnlyTypeNameProvider : ISignatureTypeProvider<InitOnlyTypeName, GenericContext>
+    {
+        public InitOnlyTypeName GetArrayType(InitOnlyTypeName elementType, ArrayShape shape) => elementType;
+
+        public InitOnlyTypeName GetByReferenceType(InitOnlyTypeName elementType) => elementType;
+
+        public InitOnlyTypeName GetFunctionPointerType(MethodSignature<InitOnlyTypeName> signature) => default;
+
+        public InitOnlyTypeName GetGenericInstantiation(
+            InitOnlyTypeName genericType,
+            ImmutableArray<InitOnlyTypeName> typeArguments
+        ) => default;
+
+        public InitOnlyTypeName GetGenericMethodParameter(GenericContext genericContext, int index) => default;
+
+        public InitOnlyTypeName GetGenericTypeParameter(GenericContext genericContext, int index) => default;
+
+        public InitOnlyTypeName GetModifiedType(
+            InitOnlyTypeName modifier,
+            InitOnlyTypeName unmodifiedType,
+            bool isRequired
+        ) => new(unmodifiedType.IsInitOnly || (isRequired && modifier.IsInitOnly));
+
+        public InitOnlyTypeName GetPinnedType(InitOnlyTypeName elementType) => elementType;
+
+        public InitOnlyTypeName GetPointerType(InitOnlyTypeName elementType) => elementType;
+
+        public InitOnlyTypeName GetPrimitiveType(PrimitiveTypeCode typeCode) => default;
+
+        public InitOnlyTypeName GetSZArrayType(InitOnlyTypeName elementType) => elementType;
+
+        public InitOnlyTypeName GetTypeFromDefinition(
+            MetadataReader reader,
+            TypeDefinitionHandle handle,
+            byte rawTypeKind
+        ) => default;
+
+        public InitOnlyTypeName GetTypeFromReference(
+            MetadataReader reader,
+            TypeReferenceHandle handle,
+            byte rawTypeKind
+        )
+        {
+            var type = reader.GetTypeReference(handle);
+            var isInitOnly =
+                reader.GetString(type.Namespace) == "System.Runtime.CompilerServices"
+                && reader.GetString(type.Name) == "IsExternalInit";
+            return new(isInitOnly);
+        }
+
+        public InitOnlyTypeName GetTypeFromSpecification(
+            MetadataReader reader,
+            GenericContext genericContext,
+            TypeSpecificationHandle handle,
+            byte rawTypeKind
+        ) => reader.GetTypeSpecification(handle).DecodeSignature(this, genericContext);
     }
 }
