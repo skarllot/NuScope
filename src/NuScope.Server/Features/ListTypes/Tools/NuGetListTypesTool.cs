@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.ListTypes.Models;
@@ -17,7 +18,7 @@ public sealed class NuGetListTypesTool(INuGetPackageTypeListingService typeListi
         OpenWorld = true
     )]
     [Description("Lists metadata-defined types from assemblies in a NuGet package lib asset folder.")]
-    public NuGetToolResult ListTypes(
+    public CallToolResult ListTypes(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The exact package version, for example '13.0.3'.")] string version,
         [Description("The target framework to resolve compatible lib or ref assets for, for example 'net8.0'.")]
@@ -35,6 +36,9 @@ public sealed class NuGetListTypesTool(INuGetPackageTypeListingService typeListi
             includePrivate,
             includeExported
         );
-        return result.Problem is not null ? result.Problem : NuGetListTypesResult.Create(result.Assemblies!);
+        NuGetToolResult toolResult = result.Problem is not null
+            ? result.Problem
+            : NuGetListTypesResult.Create(result.Assemblies!);
+        return toolResult.ToCallToolResult();
     }
 }

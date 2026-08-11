@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
@@ -17,7 +18,7 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
         OpenWorld = true
     )]
     [Description("Reads available NuGet package versions from the local cache and nuget.org.")]
-    public NuGetToolResult GetNuGetVersions(
+    public CallToolResult GetNuGetVersions(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The inclusive minimum major version to return, for example 8.")] int? minimumMajor = null,
         [Description("Whether to include prerelease versions such as '1.0.0-beta'.")] bool includePreRelease = false,
@@ -32,12 +33,15 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
     )
     {
         var result = metadataService.GetNuGetPackageVersions(packageName, minimumMajor, includePreRelease, maxItems);
-        return result.Problem is not null
-            ? result.Problem
-            : CreateVersionsResult(packageName, result.Versions!, includeDependency);
+        if (result.Problem is not null)
+        {
+            return result.Problem.ToCallToolResult();
+        }
+
+        return CreateVersionsResult(packageName, result.Versions!, includeDependency);
     }
 
-    private NuGetToolResult CreateVersionsResult(
+    private CallToolResult CreateVersionsResult(
         string packageName,
         IReadOnlyList<string> versions,
         NuGetVersionsIncludeDependency? includeDependency
@@ -45,7 +49,8 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
     {
         if (includeDependency is null)
         {
-            return NuGetVersionsResult.Create([.. versions.Select(CreateVersionItem)]);
+            NuGetToolResult toolResult = NuGetVersionsResult.Create([.. versions.Select(CreateVersionItem)]);
+            return toolResult.ToCallToolResult();
         }
 
         var items = new NuGetVersionItem[versions.Count];
@@ -55,7 +60,7 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
             var metadataResult = metadataService.GetNuGetPackageMetadata(packageName, version);
             if (metadataResult.Problem is not null)
             {
-                return metadataResult.Problem;
+                return metadataResult.Problem.ToCallToolResult();
             }
 
             items[index] = new NuGetVersionItem
@@ -68,7 +73,8 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
             };
         }
 
-        return NuGetVersionsResult.Create(items);
+        NuGetToolResult result = NuGetVersionsResult.Create(items);
+        return result.ToCallToolResult();
     }
 
     private static NuGetVersionItem CreateVersionItem(string version) => new() { Version = version };
