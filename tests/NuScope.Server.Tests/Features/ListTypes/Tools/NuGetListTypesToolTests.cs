@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.ListTypes.Models;
 using Raiqub.NuScope.Features.ListTypes.Services;
@@ -26,7 +27,10 @@ public sealed class NuGetListTypesToolTests
 
         var result = tool.ListTypes("Example.Package", "1.0.0", "net8.0");
 
-        var success = Assert.IsType<NuGetListTypesResult>(result);
+        Assert.True(result.IsError != true);
+        Assert.NotNull(result.StructuredContent);
+        var success = result.StructuredContent.Value.Deserialize<NuGetTypeAssemblyResult[]>();
+        Assert.NotNull(success);
         var assembly = Assert.Single(success);
         Assert.Equal("Example.dll", assembly.Assembly);
         Assert.Empty(assembly.Exported);
@@ -41,7 +45,9 @@ public sealed class NuGetListTypesToolTests
 
         var result = tool.ListTypes("Missing.Package", "1.0.0", "net8.0");
 
-        Assert.Same(problem, result);
+        Assert.True(result.IsError);
+        Assert.NotNull(result.StructuredContent);
+        Assert.Equal(problem, result.StructuredContent.Value.Deserialize<NuGetProblemDetailsResult>());
     }
 
     private sealed class StubTypeListingService(NuGetPackageTypesLookup result) : INuGetPackageTypeListingService

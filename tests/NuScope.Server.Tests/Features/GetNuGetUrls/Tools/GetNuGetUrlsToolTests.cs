@@ -1,4 +1,6 @@
 using System.IO.Abstractions.TestingHelpers;
+using System.Text.Json;
+using ModelContextProtocol.Protocol;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetUrls.Models;
@@ -43,7 +45,10 @@ public sealed class GetNuGetUrlsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetUrls("Package.With.Urls", "1.0.0");
 
-        var success = Assert.IsType<NuGetPackageUrlsResult>(result);
+        Assert.True(result.IsError != true);
+        Assert.NotNull(result.StructuredContent);
+        var success = result.StructuredContent.Value.Deserialize<NuGetPackageUrlsResult>();
+        Assert.NotNull(success);
         Assert.Equal("https://example.com/project", success.ProjectUrl);
         Assert.Equal("https://github.com/example/package", success.RepositoryUrl);
 
@@ -84,9 +89,12 @@ public sealed class GetNuGetUrlsToolTests
         AssertNotFoundProblem(result, "was not found");
     }
 
-    private static void AssertNotFoundProblem(NuGetToolResult result, string expectedDetail)
+    private static void AssertNotFoundProblem(CallToolResult result, string expectedDetail)
     {
-        var problem = Assert.IsType<NuGetProblemDetailsResult>(result);
+        Assert.True(result.IsError);
+        Assert.NotNull(result.StructuredContent);
+        var problem = result.StructuredContent.Value.Deserialize<NuGetProblemDetailsResult>();
+        Assert.NotNull(problem);
         Assert.Equal(ProblemTypes.NotFound, problem.Type);
         Assert.Equal("Not Found", problem.Title);
         Assert.Equal(404, problem.Status);

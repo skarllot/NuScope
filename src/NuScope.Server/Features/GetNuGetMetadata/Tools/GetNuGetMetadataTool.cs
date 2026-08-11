@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
@@ -17,7 +18,7 @@ public sealed class GetNuGetMetadataTool(INuGetPackageMetadataService metadataSe
         OpenWorld = true
     )]
     [Description("Reads package metadata for a package id and version.")]
-    public NuGetToolResult GetNuGetMetadata(
+    public CallToolResult GetNuGetMetadata(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description(
             "The exact package version, for example '13.0.3'. If omitted, the latest available version is used."
@@ -26,6 +27,9 @@ public sealed class GetNuGetMetadataTool(INuGetPackageMetadataService metadataSe
     )
     {
         var result = metadataService.GetNuGetPackageMetadata(packageName, version);
-        return result.Problem is not null ? result.Problem : NuGetMetadataResult.FromMetadata(result.Metadata!);
+        NuGetToolResult toolResult = result.Problem is not null
+            ? result.Problem
+            : NuGetMetadataResult.FromMetadata(result.Metadata!);
+        return toolResult.ToCallToolResult();
     }
 }

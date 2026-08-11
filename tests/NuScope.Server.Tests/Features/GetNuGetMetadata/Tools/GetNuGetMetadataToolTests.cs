@@ -1,4 +1,6 @@
 using System.IO.Abstractions.TestingHelpers;
+using System.Text.Json;
+using ModelContextProtocol.Protocol;
 using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Models;
@@ -49,7 +51,10 @@ public sealed class GetNuGetMetadataToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetMetadata("Newtonsoft.Json");
 
-        var success = Assert.IsType<NuGetMetadataResult>(result);
+        Assert.True(result.IsError != true);
+        Assert.NotNull(result.StructuredContent);
+        var success = result.StructuredContent.Value.Deserialize<NuGetMetadataResult>();
+        Assert.NotNull(success);
         Assert.Equal("Newtonsoft.Json", success.Id);
         Assert.Equal("13.0.3", success.Version);
         Assert.Equal("Json.NET", success.Title);
@@ -88,9 +93,12 @@ public sealed class GetNuGetMetadataToolTests
         AssertNotFoundProblem(result, "was not found");
     }
 
-    private static void AssertNotFoundProblem(NuGetToolResult result, string expectedDetail)
+    private static void AssertNotFoundProblem(CallToolResult result, string expectedDetail)
     {
-        var problem = Assert.IsType<NuGetProblemDetailsResult>(result);
+        Assert.True(result.IsError);
+        Assert.NotNull(result.StructuredContent);
+        var problem = result.StructuredContent.Value.Deserialize<NuGetProblemDetailsResult>();
+        Assert.NotNull(problem);
         Assert.Equal(ProblemTypes.NotFound, problem.Type);
         Assert.Equal("Not Found", problem.Title);
         Assert.Equal(404, problem.Status);
