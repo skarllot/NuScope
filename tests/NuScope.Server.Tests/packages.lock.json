@@ -403,8 +403,8 @@
       },
       "ModelContextProtocol.Core": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "piFR0HtA/2Oc1tgk96EE5Tye6qA2sg3WGRAXBhUqo/BWikdEYEs2UuqtmwLrQZJUge1nUOPgGHYsb15VIBK8iw==",
+        "resolved": "2.1.0",
+        "contentHash": "cU/urrhRxE4/iSyBIJI7QOaFqSP1FOEnwEHsct9n6t6/XluCAFD9iqnrPkBAsEYr+f/G4tVQ21U+6wN/6fQvOg==",
         "dependencies": {
           "Microsoft.Extensions.AI.Abstractions": "10.8.3",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.10"
@@ -497,7 +497,7 @@
         "dependencies": {
           "Microsoft.CodeAnalysis.CSharp": "[5.6.0, )",
           "Microsoft.Extensions.Hosting": "[10.0.10, )",
-          "ModelContextProtocol": "[2.0.0, )",
+          "ModelContextProtocol": "[2.1.0, )",
           "NuGet.Frameworks": "[7.6.0, )",
           "TestableIO.System.IO.Abstractions.Wrappers": "[22.1.1, )"
         }
@@ -544,13 +544,13 @@
       },
       "ModelContextProtocol": {
         "type": "CentralTransitive",
-        "requested": "[2.0.0, )",
-        "resolved": "2.0.0",
-        "contentHash": "X/KDNZDP9Zgs7YXXxxpKiDMWWPXYrs764lVgc6vEM4pCg87bYz4VaceeiKW91XDTGgUvIbmRYXgWqyNpV32xRg==",
+        "requested": "[2.1.0, )",
+        "resolved": "2.1.0",
+        "contentHash": "Oa4rU7EL9C2qyFjQj1dx+ysGMzfWDRpM8RRaUMmLGs5vPvfJ9xyz4ZtyF4ychY+Nx1b/auGCqIQLqSz/IpPkKA==",
         "dependencies": {
           "Microsoft.Extensions.Caching.Abstractions": "10.0.10",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.10",
-          "ModelContextProtocol.Core": "[2.0.0]"
+          "ModelContextProtocol.Core": "[2.1.0]"
         }
       },
       "NuGet.Frameworks": {
