@@ -6,6 +6,8 @@ using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
 using Raiqub.NuScope.Features.GetNuGetVersions.Tools;
+using Raiqub.NuScope.Features.GetTypeApi.Services;
+using Raiqub.NuScope.Features.GetTypeApi.Tools;
 using Raiqub.NuScope.Features.ListTypes.Services;
 using Raiqub.NuScope.Features.ListTypes.Tools;
 
@@ -24,6 +26,8 @@ builder.Services.AddSingleton<INuGetPackageMetadataService, NuGetPackageMetadata
 builder.Services.AddSingleton<INuGetPackageAssetResolver, NuGetPackageAssetResolver>();
 builder.Services.AddSingleton<INuGetAssemblyTypeReader, NuGetAssemblyTypeReader>();
 builder.Services.AddSingleton<INuGetPackageTypeListingService, NuGetPackageTypeListingService>();
+builder.Services.AddSingleton<INuGetTypeApiReader, NuGetTypeApiReader>();
+builder.Services.AddSingleton<INuGetPackageTypeApiService, NuGetPackageTypeApiService>();
 
 builder
     .Services.AddMcpServer()
@@ -31,6 +35,7 @@ builder
     .WithTools<GetNuGetMetadataTool>()
     .WithTools<GetNuGetUrlsTool>()
     .WithTools<GetNuGetVersionsTool>()
+    .WithTools<NuGetGetTypeApiTool>()
     .WithTools<NuGetListTypesTool>();
 
 await builder.Build().RunAsync();
