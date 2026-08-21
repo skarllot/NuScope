@@ -21,7 +21,6 @@ public static class NuGetToolResultExtensions
         return new CallToolResult
         {
             Content = [new TextContentBlock { Text = JsonSerializer.Serialize(result, result.GetType()) }],
-            StructuredContent = JsonSerializer.SerializeToElement(result, result.GetType()),
         };
     }
 }
