@@ -29,9 +29,10 @@ public sealed class NuGetListTypesToolTests
 
         Assert.True(result.IsError != true);
         Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetTypeAssemblyResult[]>();
+        Assert.Equal(JsonValueKind.Object, result.StructuredContent.Value.ValueKind);
+        var success = result.StructuredContent.Value.Deserialize<NuGetListTypesResult>();
         Assert.NotNull(success);
-        var assembly = Assert.Single(success);
+        var assembly = Assert.Single(success.Assemblies);
         Assert.Equal("Example.dll", assembly.Assembly);
         Assert.Empty(assembly.Exported);
         Assert.Equal(["class Example.Type"], assembly.Types);

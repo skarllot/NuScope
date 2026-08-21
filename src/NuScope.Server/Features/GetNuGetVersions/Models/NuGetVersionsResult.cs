@@ -1,13 +1,10 @@
-using System.Runtime.CompilerServices;
 using Raiqub.NuScope.Features.Common.Models;
 
 namespace Raiqub.NuScope.Features.GetNuGetVersions.Models;
 
-[CollectionBuilder(typeof(NuGetVersionsResult), nameof(Create))]
-public sealed record NuGetVersionsResult : NuGetToolCollectionResult<NuGetVersionItem>
+public sealed record NuGetVersionsResult : NuGetToolResult
 {
-    public NuGetVersionsResult(ReadOnlySpan<NuGetVersionItem> items)
-        : base(items) { }
+    public required IReadOnlyList<NuGetVersionItem> Versions { get; init; }
 
-    public static NuGetVersionsResult Create(ReadOnlySpan<NuGetVersionItem> values) => new(values);
+    public static NuGetVersionsResult Create(IReadOnlyList<NuGetVersionItem> versions) => new() { Versions = versions };
 }
