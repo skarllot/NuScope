@@ -5,6 +5,7 @@ using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetUrls.Models;
 using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
+using Raiqub.NuScope.Tests.Features.Common;
 using Xunit;
 
 namespace Raiqub.NuScope.Tests.Features.GetNuGetUrls.Tools;
@@ -45,10 +46,7 @@ public sealed class GetNuGetUrlsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetUrls("Package.With.Urls", "1.0.0");
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetPackageUrlsResult>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetPackageUrlsResult>(result);
         Assert.Equal("https://example.com/project", success.ProjectUrl);
         Assert.Equal("https://github.com/example/package", success.RepositoryUrl);
 
