@@ -5,6 +5,7 @@ using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetVersions.Models;
 using Raiqub.NuScope.Features.GetNuGetVersions.Tools;
+using Raiqub.NuScope.Tests.Features.Common;
 using Xunit;
 
 namespace Raiqub.NuScope.Tests.Features.GetNuGetVersions.Tools;
@@ -23,10 +24,7 @@ public sealed class GetNuGetVersionsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetVersions("Newtonsoft.Json", minimumMajor: 13);
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["13.0.3"], success.Select(item => item.Version).ToArray());
         Assert.All(success, item => Assert.Null(item.DependencyGroups));
     }
@@ -43,10 +41,7 @@ public sealed class GetNuGetVersionsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetVersions("Newtonsoft.Json", minimumMajor: 13, includePreRelease: true);
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["13.0.3", "13.0.3-beta.1"], success.Select(item => item.Version).ToArray());
         Assert.All(success, item => Assert.Null(item.DependencyGroups));
     }
@@ -64,10 +59,7 @@ public sealed class GetNuGetVersionsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetVersions("Newtonsoft.Json", maxItems: 2);
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["13.0.3", "12.0.1"], success.Select(item => item.Version).ToArray());
         Assert.All(success, item => Assert.Null(item.DependencyGroups));
     }
@@ -88,10 +80,7 @@ public sealed class GetNuGetVersionsToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetVersions("Newtonsoft.Json");
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["6.0.0", "5.0.0", "4.0.0", "3.0.0", "2.0.0"], success.Select(item => item.Version).ToArray());
     }
 
@@ -104,10 +93,7 @@ public sealed class GetNuGetVersionsToolTests
 
         var result = new GetNuGetVersionsTool(metadataService).GetNuGetVersions("Newtonsoft.Json", maxItems: 2);
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["6.0.0", "5.0.0"], success.Select(item => item.Version).ToArray());
         Assert.Equal(2, metadataService.MaxItems);
     }
@@ -119,10 +105,7 @@ public sealed class GetNuGetVersionsToolTests
 
         var result = new GetNuGetVersionsTool(metadataService).GetNuGetVersions("Newtonsoft.Json");
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         var item = Assert.Single(success);
         Assert.Equal("13.0.3", item.Version);
         Assert.Null(item.DependencyGroups);
@@ -142,10 +125,7 @@ public sealed class GetNuGetVersionsToolTests
             includeDependency: NuGetVersionsIncludeDependency.TargetFrameworks
         );
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         var item = Assert.Single(success);
         var dependencyGroups = Assert.IsAssignableFrom<IReadOnlyList<NuGetVersionDependencyGroup>>(
             item.DependencyGroups
@@ -169,10 +149,7 @@ public sealed class GetNuGetVersionsToolTests
             includeDependency: NuGetVersionsIncludeDependency.Full
         );
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         var item = Assert.Single(success);
         var dependencyGroups = Assert.IsAssignableFrom<IReadOnlyList<NuGetVersionDependencyGroup>>(
             item.DependencyGroups
@@ -203,10 +180,7 @@ public sealed class GetNuGetVersionsToolTests
             includeDependency: NuGetVersionsIncludeDependency.Full
         );
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetVersionItem[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
         Assert.Equal(["2.0.0", "1.0.0"], success.Select(item => item.Version).ToArray());
 
         var currentGroups = Assert.IsAssignableFrom<IReadOnlyList<NuGetVersionDependencyGroup>>(
