@@ -3,6 +3,7 @@ using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.ListTypes.Models;
 using Raiqub.NuScope.Features.ListTypes.Services;
 using Raiqub.NuScope.Features.ListTypes.Tools;
+using Raiqub.NuScope.Tests.Features.Common;
 using Xunit;
 
 namespace Raiqub.NuScope.Tests.Features.ListTypes.Tools;
@@ -27,10 +28,7 @@ public sealed class NuGetListTypesToolTests
 
         var result = tool.ListTypes("Example.Package", "1.0.0", "net8.0");
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetTypeAssemblyResult[]>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetTypeAssemblyResult[]>(result);
         var assembly = Assert.Single(success);
         Assert.Equal("Example.dll", assembly.Assembly);
         Assert.Empty(assembly.Exported);

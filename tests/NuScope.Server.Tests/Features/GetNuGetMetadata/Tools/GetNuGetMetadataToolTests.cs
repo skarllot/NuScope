@@ -5,6 +5,7 @@ using Raiqub.NuScope.Features.Common.Models;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Models;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
+using Raiqub.NuScope.Tests.Features.Common;
 using Xunit;
 
 namespace Raiqub.NuScope.Tests.Features.GetNuGetMetadata.Tools;
@@ -51,10 +52,7 @@ public sealed class GetNuGetMetadataToolTests
             new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
         ).GetNuGetMetadata("Newtonsoft.Json");
 
-        Assert.True(result.IsError != true);
-        Assert.NotNull(result.StructuredContent);
-        var success = result.StructuredContent.Value.Deserialize<NuGetMetadataResult>();
-        Assert.NotNull(success);
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetMetadataResult>(result);
         Assert.Equal("Newtonsoft.Json", success.Id);
         Assert.Equal("13.0.3", success.Version);
         Assert.Equal("Json.NET", success.Title);
