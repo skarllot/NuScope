@@ -9,7 +9,7 @@ using Raiqub.NuScope.Features.Common.Extensions;
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Services;
 
-public sealed class NuGetTypeApiReader : INuGetTypeApiReader
+public sealed partial class NuGetTypeApiReader : INuGetTypeApiReader
 {
     public string? ReadTypeApi(Stream stream, string fullTypeName, bool includePrivate)
     {
@@ -128,7 +128,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
         return string.Join(".", segments);
     }
 
-    private sealed class ApiRenderer(MetadataReader reader, bool includePrivate)
+    private sealed partial class ApiRenderer(MetadataReader reader, bool includePrivate)
     {
         private readonly SignatureTypeNameProvider typeNameProvider = new();
         private readonly InitOnlyTypeNameProvider initOnlyTypeNameProvider = new();
@@ -241,7 +241,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                         and not "System.MulticastDelegate"
             )
             {
-                baseTypes.Add(baseType);
+                baseTypes.Add(
+                    GetNullableEntityTypeName(
+                        type.BaseType,
+                        context,
+                        type.GetCustomAttributes(),
+                        GetNullableContext(type)
+                    )!
+                );
             }
 
             if (kind is not "enum" and not "delegate")
@@ -249,7 +256,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 baseTypes.AddRange(
                     type.GetInterfaceImplementations()
                         .Select(handle => reader.GetInterfaceImplementation(handle))
-                        .Select(implementation => GetEntityTypeName(implementation.Interface, context))
+                        .Select(implementation =>
+                            GetNullableEntityTypeName(
+                                implementation.Interface,
+                                context,
+                                implementation.GetCustomAttributes(),
+                                GetNullableContext(type)
+                            )
+                        )
                         .OfType<string>()
                 );
             }
@@ -294,7 +308,13 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 }
 
                 builder
-                    .Append(field.DecodeSignature(typeNameProvider, context))
+                    .Append(
+                        FormatNullable(
+                            field.DecodeSignature(nullableTypeProvider, context),
+                            field.GetCustomAttributes(),
+                            GetNullableContext(field.GetDeclaringType())
+                        )
+                    )
                     .Append(' ')
                     .Append(FormatMetadataIdentifier(reader.GetString(field.Name)));
                 var constant = GetConstant(field.GetDefaultValue());
@@ -330,7 +350,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 }
 
                 var methodContext = CreateGenericContext(type.GetGenericParameters(), method.GetGenericParameters());
-                var signature = method.DecodeSignature(typeNameProvider, methodContext);
+                var signature = DecodeNullableMethod(method, methodContext);
                 builder.AppendIndent(indent);
                 if (!isInterface && name != ".cctor")
                 {
@@ -377,7 +397,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     continue;
                 }
 
-                var signature = property.DecodeSignature(typeNameProvider, context);
+                var signature = property.DecodeSignature(nullableTypeProvider, context);
                 var representative = GetMostVisible(getter, setter);
                 builder.AppendIndent(indent);
                 if (!isInterface)
@@ -386,7 +406,15 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     AppendMethodModifiers(builder, representative.Value.Attributes, false);
                 }
 
-                builder.Append(signature.ReturnType).Append(' ');
+                builder
+                    .Append(
+                        FormatNullable(
+                            signature.ReturnType,
+                            property.GetCustomAttributes(),
+                            GetNullableContext(representative!.Value.GetDeclaringType())
+                        )
+                    )
+                    .Append(' ');
                 if (signature.ParameterTypes.Length == 0)
                 {
                     builder.Append(FormatMetadataIdentifier(reader.GetString(property.Name)));
@@ -394,7 +422,12 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 else
                 {
                     builder.Append("this[");
-                    AppendParameterTypes(builder, signature.ParameterTypes);
+                    AppendParameterTypes(
+                        builder,
+                        DecodeNullableMethod(representative!.Value, context)
+                            .ParameterTypes.Take(signature.ParameterTypes.Length)
+                            .ToImmutableArray()
+                    );
                     builder.Append(']');
                 }
 
@@ -448,7 +481,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
 
                 builder
                     .Append("event ")
-                    .Append(GetEntityTypeName(@event.Type, context))
+                    .Append(
+                        GetNullableEntityTypeName(
+                            @event.Type,
+                            context,
+                            @event.GetCustomAttributes(),
+                            GetNullableContext(representative.Value.GetDeclaringType())
+                        )
+                    )
                     .Append(' ')
                     .Append(FormatMetadataIdentifier(reader.GetString(@event.Name)))
                     .AppendLine(";");
@@ -509,7 +549,7 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                 return;
             }
 
-            var signature = invoke.DecodeSignature(typeNameProvider, context);
+            var signature = DecodeNullableMethod(invoke, context);
             builder.AppendIndent(indent);
             builder
                 .Append(GetTypeVisibility(type.Attributes))
@@ -601,7 +641,17 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     (parameter.Attributes & GenericParameterAttributes.NotNullableValueTypeConstraint) != 0;
                 if ((parameter.Attributes & GenericParameterAttributes.ReferenceTypeConstraint) != 0)
                 {
-                    constraints.Add("class");
+                    constraints.Add(GetGenericParameterNullableFlag(parameter) == 2 ? "class?" : "class");
+                }
+
+                if (
+                    !hasValueTypeConstraint
+                    && (parameter.Attributes & GenericParameterAttributes.ReferenceTypeConstraint) == 0
+                    && parameter.GetConstraints().Count == 0
+                    && GetGenericParameterNullableFlag(parameter) == 1
+                )
+                {
+                    constraints.Add("notnull");
                 }
 
                 if (hasValueTypeConstraint)
@@ -613,7 +663,14 @@ public sealed class NuGetTypeApiReader : INuGetTypeApiReader
                     parameter
                         .GetConstraints()
                         .Select(constraintHandle => reader.GetGenericParameterConstraint(constraintHandle))
-                        .Select(constraint => GetEntityTypeName(constraint.Type, context))
+                        .Select(constraint =>
+                            GetNullableEntityTypeName(
+                                constraint.Type,
+                                context,
+                                constraint.GetCustomAttributes(),
+                                GetNullableContext(parameter.Parent)
+                            )
+                        )
                         .OfType<string>()
                         .Where(constraint => constraint != "System.ValueType")
                 );

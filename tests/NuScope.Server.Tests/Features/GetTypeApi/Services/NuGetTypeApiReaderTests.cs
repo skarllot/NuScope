@@ -31,12 +31,12 @@ public sealed class NuGetTypeApiReaderTests
                     public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public override bool Equals(object obj);
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                    public override bool Equals(object? obj);
                     public override int GetHashCode();
                     protected string Name { get; }
-                    public event System.EventHandler Changed;
+                    public event System.EventHandler? Changed;
                 }
             }
             """;
@@ -68,13 +68,13 @@ public sealed class NuGetTypeApiReaderTests
                     public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
                     public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
                     public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public override bool Equals(object obj);
+                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                    public override bool Equals(object? obj);
                     public override int GetHashCode();
                     internal int GetSecret();
                     protected string Name { get; private set; }
-                    public event System.EventHandler Changed;
+                    public event System.EventHandler? Changed;
                 }
             }
             """;
@@ -105,7 +105,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
                     public const string Multiline = "a\r\nb";
-                    public const object Nothing = null;
+                    public const object? Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
                     protected const int ProtectedOnly = 10;
@@ -156,7 +156,7 @@ public sealed class NuGetTypeApiReaderTests
                     public const double Real64Value = 2.5;
                     public const string Text = "a\\\"b";
                     public const string Multiline = "a\r\nb";
-                    public const object Nothing = null;
+                    public const object? Nothing = null;
                     public static readonly int Shared;
                     protected internal const int ProtectedValue = 9;
                     protected const int ProtectedOnly = 10;
@@ -336,7 +336,7 @@ public sealed class NuGetTypeApiReaderTests
                     public @event();
                     public int @namespace { get; set; }
                     public int @return { get; set; }
-                    public event System.EventHandler @delegate;
+                    public event System.EventHandler? @delegate;
                 }
             }
             """;
