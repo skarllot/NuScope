@@ -16,9 +16,7 @@ public sealed class NuGetGetTypeApiTool(INuGetPackageTypeApiService typeApiServi
         Idempotent = true,
         OpenWorld = true
     )]
-    [Description(
-        "Returns a C# API declaration for a type from a NuGet package assembly, including nullable reference type annotations when present in metadata."
-    )]
+    [Description("Returns a C# API declaration for a type from a NuGet package assembly.")]
     public CallToolResult GetTypeApi(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The exact package version, for example '13.0.3'.")] string version,
