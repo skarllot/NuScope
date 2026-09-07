@@ -85,6 +85,17 @@ public sealed class NullableTypeApiReaderTests
         Assert.Contains("System.Collections.Generic.Dictionary<string, object[]> Map", api, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void PreservesNullableTypesOnInitOnlyProperties()
+    {
+        var api = Read(typeof(NullableInitFixture<>));
+
+        Assert.Contains("string?[]? Names { get; init; }", api, StringComparison.Ordinal);
+        Assert.Contains("System.Collections.Generic.List<T?>? Items { get; init; }", api, StringComparison.Ordinal);
+        Assert.Contains("string?[,]? Grid { get; init; }", api, StringComparison.Ordinal);
+        Assert.Contains("T? Value { get; init; }", api, StringComparison.Ordinal);
+    }
+
     private static string Read(Type type)
     {
         using var stream = File.OpenRead(type.Assembly.Location);

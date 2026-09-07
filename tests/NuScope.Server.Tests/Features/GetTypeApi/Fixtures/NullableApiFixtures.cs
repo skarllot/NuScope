@@ -50,6 +50,15 @@ public interface INullableBaseFixture : IEnumerable<string?>;
 
 public abstract class NullableDerivedFixture : List<string?>;
 
+public sealed class NullableInitFixture<T>
+    where T : class?
+{
+    public string?[]? Names { get; init; }
+    public List<T?>? Items { get; init; }
+    public string?[,]? Grid { get; init; }
+    public T? Value { get; init; }
+}
+
 #nullable disable
 public interface ILegacyApiFixture
 {
