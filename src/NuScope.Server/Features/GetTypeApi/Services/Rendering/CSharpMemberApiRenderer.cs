@@ -98,7 +98,7 @@ internal sealed class CSharpMemberApiRenderer(
             {
                 builder.Append(FormatMetadataIdentifier(RemoveGenericArity(reader.GetString(type.Name))));
             }
-            else if (name is "op_Implicit" or "op_Explicit")
+            else if (name is "op_Implicit" or "op_Explicit" or "op_CheckedExplicit")
             {
                 builder.Append(GetMethodName(name)).Append(' ').Append(signature.ReturnType);
             }
