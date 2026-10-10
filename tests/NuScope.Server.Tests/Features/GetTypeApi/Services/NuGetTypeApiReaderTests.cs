@@ -17,6 +17,14 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class TypeApiFixture<T> where T : class, new()
@@ -36,7 +44,7 @@ public sealed class NuGetTypeApiReaderTests
                 public override bool Equals(object? obj);
                 public override int GetHashCode();
                 protected string Name { get; }
-                public event System.EventHandler? Changed;
+                public event EventHandler? Changed;
             }
             """;
 
@@ -52,6 +60,14 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class TypeApiFixture<T> where T : class, new()
@@ -73,7 +89,7 @@ public sealed class NuGetTypeApiReaderTests
                 public override int GetHashCode();
                 internal int GetSecret();
                 protected string Name { get; private set; }
-                public event System.EventHandler? Changed;
+                public event EventHandler? Changed;
             }
             """;
 
@@ -84,6 +100,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSupportedClassMembers()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
@@ -121,9 +145,9 @@ public sealed class NuGetTypeApiReaderTests
                 public nuint NativeUInt { get; }
                 public int* Address { get; }
                 public delegate* Callback { get; }
-                public System.Environment.SpecialFolder SpecialFolder { get; }
+                public Environment.SpecialFolder SpecialFolder { get; }
                 protected internal int ProtectedInternalProperty { get; }
-                public abstract event System.EventHandler Changed;
+                public abstract event EventHandler Changed;
             }
             """;
 
@@ -134,6 +158,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateClassMembers()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
@@ -178,11 +210,11 @@ public sealed class NuGetTypeApiReaderTests
                 public nuint NativeUInt { get; }
                 public int* Address { get; }
                 public delegate* Callback { get; }
-                public System.Environment.SpecialFolder SpecialFolder { get; }
+                public Environment.SpecialFolder SpecialFolder { get; }
                 protected internal int ProtectedInternalProperty { get; private protected set; }
                 internal int InternalProperty { get; private set; }
-                public abstract event System.EventHandler Changed;
-                private event System.EventHandler Hidden;
+                public abstract event EventHandler Changed;
+                private event EventHandler Hidden;
             }
             """;
 
@@ -193,13 +225,21 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersInterface()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public interface IApiContractFixture<T> where T : struct
             {
                 T Transform<TInput>(in T value, TInput input) where TInput : class, new();
                 T Value { get; set; }
-                event System.EventHandler Changed;
+                event EventHandler Changed;
             }
             """;
 
@@ -210,6 +250,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStruct()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public struct ApiStructFixture
@@ -226,6 +274,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersEnum()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public enum ApiEnumFixture : short
@@ -242,9 +298,17 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersDelegate()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
-            public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, System.IDisposable;
+            public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, IDisposable;
             """;
 
         AssertTypeApi(typeof(ApiDelegateFixture<,>), expected, includePrivate: false);
@@ -254,6 +318,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStaticClass()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public static class ApiStaticFixture
@@ -269,6 +341,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersInitOnlyProperty()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class ApiInitOnlyFixture
@@ -285,6 +365,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersTypeWithoutNamespace()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             public sealed class GlobalApiFixture
             {
                 public GlobalApiFixture();
@@ -298,6 +386,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClassAndNestedClass()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public sealed class TypeApiPublicSample
@@ -317,6 +413,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiEscapesKeywordIdentifiers()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class @event<@class> where @class : class
@@ -325,7 +429,7 @@ public sealed class NuGetTypeApiReaderTests
                 public @event();
                 public int @namespace { get; set; }
                 public int @return { get; set; }
-                public event System.EventHandler? @delegate;
+                public event EventHandler? @delegate;
             }
             """;
 
@@ -336,6 +440,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersVirtualOverrideAndSealedOverrideMethods()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiMethodModifierBaseFixture
@@ -353,6 +465,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersAbstractClass()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public abstract class ApiAbstractClassFixture
@@ -368,6 +488,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClass()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public sealed class ApiSealedClassFixture
@@ -436,6 +564,14 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             internal sealed class TypeApiHiddenSample
@@ -484,6 +620,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPublicNestedTypes()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class ApiNestedFixture
@@ -508,6 +652,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateNestedTypes()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
 
             public class ApiNestedFixture

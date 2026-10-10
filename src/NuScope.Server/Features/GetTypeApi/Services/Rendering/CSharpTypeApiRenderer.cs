@@ -16,6 +16,7 @@ internal sealed class CSharpTypeApiRenderer
     private readonly NullableMetadataDecoder nullability;
     private readonly CSharpGenericDeclarations generics;
     private readonly CSharpMemberApiRenderer members;
+    private readonly CSharpAttributeRenderer attributes;
     private readonly SignatureTypeNameProvider typeNameProvider = new();
 
     public CSharpTypeApiRenderer(MetadataReader reader, bool includePrivate)
@@ -24,8 +25,9 @@ internal sealed class CSharpTypeApiRenderer
         this.includePrivate = includePrivate;
         metadata = new ApiMetadataReader(reader);
         nullability = new NullableMetadataDecoder(reader, metadata);
-        generics = new CSharpGenericDeclarations(reader, nullability);
-        members = new CSharpMemberApiRenderer(reader, metadata, nullability, generics, includePrivate);
+        attributes = new CSharpAttributeRenderer(reader, metadata);
+        generics = new CSharpGenericDeclarations(reader, nullability, attributes);
+        members = new CSharpMemberApiRenderer(reader, metadata, nullability, generics, attributes, includePrivate);
     }
 
     public string Render(TypeDefinitionHandle handle)
@@ -40,7 +42,7 @@ internal sealed class CSharpTypeApiRenderer
 
         RenderType(builder, handle, 0);
 
-        return builder.ToString();
+        return new CSharpApiUsings(reader).Render(builder.ToString());
     }
 
     private void RenderType(StringBuilder builder, TypeDefinitionHandle handle, int indent)
@@ -49,6 +51,8 @@ internal sealed class CSharpTypeApiRenderer
         var context = metadata.CreateGenericContext(type.GetGenericParameters(), default);
         var baseType = metadata.GetEntityTypeName(type.BaseType, context);
         var kind = metadata.GetTypeKind(type, baseType);
+
+        attributes.AppendLines(builder, type.GetCustomAttributes(), indent);
 
         if (kind == "delegate")
         {

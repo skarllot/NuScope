@@ -2,6 +2,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Raiqub.NuScope.Features.Common.Extensions;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
@@ -39,7 +40,8 @@ builder
     .WithTools<NuGetGetTypeApiTool>()
     .WithTools<DllGetTypeApiTool>()
     .WithTools<DllListTypesTool>()
-    .WithTools<NuGetListTypesTool>();
+    .WithTools<NuGetListTypesTool>()
+    .WithPortableToolSchemas();
 
 await builder.Build().RunAsync();
 

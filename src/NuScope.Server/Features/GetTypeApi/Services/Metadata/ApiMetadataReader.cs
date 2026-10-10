@@ -54,6 +54,24 @@ internal sealed class ApiMetadataReader(MetadataReader reader)
         return false;
     }
 
+    public bool IsExtensionMethod(MethodDefinition method) =>
+        (method.Attributes & MethodAttributes.Static) != 0
+        && method
+            .GetCustomAttributes()
+            .Any(handle =>
+                GetAttributeTypeName(reader.GetCustomAttribute(handle).Constructor)
+                == "System.Runtime.CompilerServices.ExtensionAttribute"
+            );
+
+    public bool IsParamsParameter(Parameter parameter) =>
+        parameter
+            .GetCustomAttributes()
+            .Any(handle =>
+                GetAttributeTypeName(reader.GetCustomAttribute(handle).Constructor)
+                    is "System.ParamArrayAttribute"
+                        or "System.Runtime.CompilerServices.ParamCollectionAttribute"
+            );
+
     public string? GetAttributeTypeName(EntityHandle constructor)
     {
         EntityHandle parent = constructor.Kind switch
