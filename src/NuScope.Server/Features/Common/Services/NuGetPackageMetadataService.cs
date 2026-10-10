@@ -64,7 +64,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         ThrowIfInvalidMaximumMajor(minimumMajor, maximumMajor);
         ThrowIfNotPositive(maxItems);
 
-        var localLookup = GetLocalNuGetPackageVersions(packageName, minimumMajor, includePreRelease, maximumMajor);
+        var localLookup = GetLocalNuGetPackageVersions(packageName, minimumMajor, maximumMajor, includePreRelease);
         var remoteLookup = remoteMetadataClient.GetNuGetPackageVersions(
             packageName,
             minimumMajor,
@@ -79,9 +79,9 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 localLookup.Versions ?? [],
                 remoteLookup.Versions ?? [],
                 minimumMajor,
+                maximumMajor,
                 includePreRelease,
-                maxItems,
-                maximumMajor
+                maxItems
             );
             return versions.Length == 0
                 ? NuGetPackageVersionsLookup.NotFound(
@@ -187,6 +187,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         var localVersionsLookup = GetLocalNuGetPackageVersions(
             packageName,
             minimumMajor: null,
+            maximumMajor: null,
             includePreRelease: true
         );
         if (localVersionsLookup.Problem is { Status: not 404 })
@@ -206,6 +207,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 localVersionsLookup.Versions ?? [],
                 remoteVersionsLookup.Versions ?? [],
                 minimumMajor: null,
+                maximumMajor: null,
                 includePreRelease: true,
                 maxItems: 1
             );
@@ -225,8 +227,8 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     private NuGetPackageVersionsLookup GetLocalNuGetPackageVersions(
         string packageName,
         int? minimumMajor,
-        bool includePreRelease,
-        int? maximumMajor = null
+        int? maximumMajor,
+        bool includePreRelease
     )
     {
         try
@@ -244,7 +246,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 .Select(fileSystem.Path.GetFileName)
                 .OfType<string>()
                 .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
-                .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease, maximumMajor))
+                .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, maximumMajor, includePreRelease))
                 .OrderByDescending(version => version.Parsed)
                 .Select(version => version.Version)
                 .ToArray();
@@ -277,15 +279,15 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         IReadOnlyList<string> localVersions,
         IReadOnlyList<string> remoteVersions,
         int? minimumMajor,
+        int? maximumMajor,
         bool includePreRelease,
-        int? maxItems,
-        int? maximumMajor = null
+        int? maxItems
     )
     {
         var versions = localVersions
             .Concat(remoteVersions)
             .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
-            .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease, maximumMajor))
+            .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, maximumMajor, includePreRelease))
             .GroupBy(version => version.Version, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .OrderByDescending(version => version.Parsed)
@@ -302,8 +304,8 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     private static bool VersionMatchesFilter(
         NuGetPackageVersion? version,
         int? minimumMajor,
-        bool includePreRelease,
-        int? maximumMajor
+        int? maximumMajor,
+        bool includePreRelease
     ) =>
         version is not null
         && (includePreRelease || version.Prerelease is null)
