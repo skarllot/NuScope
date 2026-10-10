@@ -15,6 +15,7 @@ internal sealed class CSharpMemberApiRenderer(
     ApiMetadataReader metadata,
     NullableMetadataDecoder nullability,
     CSharpGenericDeclarations generics,
+    CSharpAttributeRenderer attributes,
     bool includePrivate
 )
 {
@@ -32,6 +33,7 @@ internal sealed class CSharpMemberApiRenderer(
                 continue;
             }
 
+            attributes.AppendLines(builder, field.GetCustomAttributes(), indent);
             builder.AppendIndent(indent);
             builder.Append(GetFieldVisibility(field.Attributes));
             if ((field.Attributes & FieldAttributes.Literal) != 0)
@@ -87,6 +89,8 @@ internal sealed class CSharpMemberApiRenderer(
                 method.GetGenericParameters()
             );
             var signature = nullability.DecodeNullableMethod(method, methodContext);
+            attributes.AppendLines(builder, method.GetCustomAttributes(), indent);
+            AppendReturnAttributes(builder, method, indent);
             builder.AppendIndent(indent);
             if (!isInterface && name != ".cctor")
             {
@@ -135,6 +139,13 @@ internal sealed class CSharpMemberApiRenderer(
 
             var representative = GetMostVisible(getter, setter);
             var signature = nullability.DecodeProperty(property, context, representative!.Value.GetDeclaringType());
+            attributes.AppendLines(builder, property.GetCustomAttributes(), indent);
+            AppendBackingFieldAttributes(
+                builder,
+                type,
+                "<" + reader.GetString(property.Name) + ">k__BackingField",
+                indent
+            );
             builder.AppendIndent(indent);
             if (!isInterface)
             {
@@ -155,7 +166,8 @@ internal sealed class CSharpMemberApiRenderer(
                     nullability
                         .DecodeNullableMethod(representative!.Value, context)
                         .ParameterTypes.Take(signature.ParameterCount)
-                        .ToImmutableArray()
+                        .ToImmutableArray(),
+                    representative.Value
                 );
                 builder.Append(']');
             }
@@ -163,11 +175,13 @@ internal sealed class CSharpMemberApiRenderer(
             builder.Append(" { ");
             if (getter is not null)
             {
+                AppendAccessorAttributes(builder, getter.Value);
                 AppendAccessor(builder, "get", getter.Value, representative!.Value, isInterface);
             }
 
             if (setter is not null)
             {
+                AppendAccessorAttributes(builder, setter.Value);
                 AppendAccessor(
                     builder,
                     metadata.IsInitOnlySetter(setter.Value) ? "init" : "set",
@@ -201,6 +215,8 @@ internal sealed class CSharpMemberApiRenderer(
                 continue;
             }
 
+            attributes.AppendLines(builder, @event.GetCustomAttributes(), indent);
+            AppendBackingFieldAttributes(builder, type, reader.GetString(@event.Name), indent);
             builder.AppendIndent(indent);
             if (!isInterface)
             {
@@ -219,8 +235,29 @@ internal sealed class CSharpMemberApiRenderer(
                     )
                 )
                 .Append(' ')
-                .Append(FormatMetadataIdentifier(reader.GetString(@event.Name)))
-                .AppendLine(";");
+                .Append(FormatMetadataIdentifier(reader.GetString(@event.Name)));
+            if (
+                (adder is not null && HasAccessorAttributes(adder.Value))
+                || (remover is not null && HasAccessorAttributes(remover.Value))
+            )
+            {
+                builder.Append(" { ");
+                if (adder is not null)
+                {
+                    AppendAccessorAttributes(builder, adder.Value);
+                    builder.Append("add; ");
+                }
+                if (remover is not null)
+                {
+                    AppendAccessorAttributes(builder, remover.Value);
+                    builder.Append("remove; ");
+                }
+                builder.AppendLine("}");
+            }
+            else
+            {
+                builder.AppendLine(";");
+            }
         }
     }
 
@@ -234,6 +271,7 @@ internal sealed class CSharpMemberApiRenderer(
                 continue;
             }
 
+            attributes.AppendLines(builder, field.GetCustomAttributes(), indent);
             builder.AppendIndent(indent);
             builder.Append(FormatMetadataIdentifier(reader.GetString(field.Name)));
             var constant = metadata.GetConstant(field.GetDefaultValue());
@@ -262,6 +300,7 @@ internal sealed class CSharpMemberApiRenderer(
         }
 
         var signature = nullability.DecodeNullableMethod(invoke, context);
+        AppendReturnAttributes(builder, invoke, indent);
         builder.AppendIndent(indent);
         builder
             .Append(GetTypeVisibility(type.Attributes))
@@ -276,6 +315,7 @@ internal sealed class CSharpMemberApiRenderer(
 
     private void AppendParameters(StringBuilder builder, MethodDefinition method, ImmutableArray<string> parameterTypes)
     {
+        var isExtensionMethod = metadata.IsExtensionMethod(method);
         var parameterNames = method
             .GetParameters()
             .Select(handle => reader.GetParameter(handle))
@@ -290,7 +330,19 @@ internal sealed class CSharpMemberApiRenderer(
             }
 
             var parameterType = parameterTypes[index];
-            parameterNames.TryGetValue(index, out var parameter);
+            var hasParameter = parameterNames.TryGetValue(index, out var parameter);
+            if (hasParameter)
+            {
+                attributes.AppendInline(builder, parameter.GetCustomAttributes());
+            }
+            if (index == 0 && isExtensionMethod)
+            {
+                builder.Append("this ");
+            }
+            if (hasParameter && metadata.IsParamsParameter(parameter))
+            {
+                builder.Append("params ");
+            }
             if (
                 (parameter.Attributes & ParameterAttributes.Out) != 0
                 && parameterType.StartsWith("ref ", StringComparison.Ordinal)
@@ -322,8 +374,17 @@ internal sealed class CSharpMemberApiRenderer(
         builder.Append(')');
     }
 
-    private static void AppendParameterTypes(StringBuilder builder, ImmutableArray<string> parameterTypes)
+    private void AppendParameterTypes(
+        StringBuilder builder,
+        ImmutableArray<string> parameterTypes,
+        MethodDefinition method
+    )
     {
+        var parameters = method
+            .GetParameters()
+            .Select(reader.GetParameter)
+            .Where(parameter => parameter.SequenceNumber > 0)
+            .ToDictionary(parameter => parameter.SequenceNumber - 1);
         for (var index = 0; index < parameterTypes.Length; index++)
         {
             if (index > 0)
@@ -331,7 +392,75 @@ internal sealed class CSharpMemberApiRenderer(
                 builder.Append(", ");
             }
 
+            if (parameters.TryGetValue(index, out var parameter))
+            {
+                attributes.AppendInline(builder, parameter.GetCustomAttributes());
+                if (metadata.IsParamsParameter(parameter))
+                {
+                    builder.Append("params ");
+                }
+            }
             builder.Append(parameterTypes[index]).Append(' ').Append("arg").Append(index);
+        }
+    }
+
+    private void AppendReturnAttributes(StringBuilder builder, MethodDefinition method, int indent)
+    {
+        foreach (var handle in method.GetParameters())
+        {
+            var parameter = reader.GetParameter(handle);
+            if (parameter.SequenceNumber == 0)
+            {
+                attributes.AppendLines(builder, parameter.GetCustomAttributes(), indent, "return");
+            }
+        }
+    }
+
+    private bool HasAccessorAttributes(MethodDefinition method) =>
+        attributes.HasAttributes(method.GetCustomAttributes())
+        || method
+            .GetParameters()
+            .Any(handle => attributes.HasAttributes(reader.GetParameter(handle).GetCustomAttributes()));
+
+    private void AppendAccessorAttributes(StringBuilder builder, MethodDefinition method)
+    {
+        attributes.AppendInline(builder, method.GetCustomAttributes());
+        foreach (var handle in method.GetParameters())
+        {
+            var parameter = reader.GetParameter(handle);
+            if (parameter.SequenceNumber == 0)
+            {
+                attributes.AppendInline(builder, parameter.GetCustomAttributes(), "return");
+            }
+            else if (
+                parameter.SequenceNumber
+                    == method
+                        .DecodeSignature(new SignatureTypeNameProvider(), GenericContext.Empty)
+                        .ParameterTypes.Length
+                && (
+                    reader.GetString(method.Name).StartsWith("set_", StringComparison.Ordinal)
+                    || reader.GetString(method.Name).StartsWith("add_", StringComparison.Ordinal)
+                    || reader.GetString(method.Name).StartsWith("remove_", StringComparison.Ordinal)
+                )
+            )
+            {
+                attributes.AppendInline(builder, parameter.GetCustomAttributes(), "param");
+            }
+        }
+    }
+
+    private void AppendBackingFieldAttributes(StringBuilder builder, TypeDefinition type, string name, int indent)
+    {
+        foreach (var handle in type.GetFields())
+        {
+            var field = reader.GetFieldDefinition(handle);
+            if (
+                reader.GetString(field.Name) == name
+                && metadata.HasCompilerGeneratedAttribute(field.GetCustomAttributes())
+            )
+            {
+                attributes.AppendLines(builder, field.GetCustomAttributes(), indent, "field");
+            }
         }
     }
 

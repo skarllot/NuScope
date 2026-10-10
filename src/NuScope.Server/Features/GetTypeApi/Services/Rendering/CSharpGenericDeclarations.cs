@@ -7,7 +7,11 @@ using static Raiqub.NuScope.Features.GetTypeApi.Services.Rendering.CSharpApiModi
 
 namespace Raiqub.NuScope.Features.GetTypeApi.Services.Rendering;
 
-internal sealed class CSharpGenericDeclarations(MetadataReader reader, NullableMetadataDecoder nullability)
+internal sealed class CSharpGenericDeclarations(
+    MetadataReader reader,
+    NullableMetadataDecoder nullability,
+    CSharpAttributeRenderer attributes
+)
 {
     public void AppendGenericConstraints(
         StringBuilder builder,
@@ -77,13 +81,23 @@ internal sealed class CSharpGenericDeclarations(MetadataReader reader, NullableM
 
     public void AppendGenericParameterList(StringBuilder builder, GenericParameterHandleCollection handles)
     {
-        var names = handles
-            .Select(handle => FormatMetadataIdentifier(reader.GetString(reader.GetGenericParameter(handle).Name)))
-            .ToArray();
-        if (names.Length > 0)
+        if (handles.Count == 0)
         {
-            builder.Append('<').AppendJoin(", ", names).Append('>');
+            return;
         }
+
+        builder.Append('<');
+        var first = true;
+        foreach (var handle in handles)
+        {
+            if (!first)
+                builder.Append(", ");
+            first = false;
+            var parameter = reader.GetGenericParameter(handle);
+            attributes.AppendInline(builder, parameter.GetCustomAttributes());
+            builder.Append(FormatMetadataIdentifier(reader.GetString(parameter.Name)));
+        }
+        builder.Append('>');
     }
 
     public string GetTypeDeclarationName(TypeDefinition type)

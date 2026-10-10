@@ -17,27 +17,34 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class TypeApiFixture<T> where T : class, new()
             {
-                public class TypeApiFixture<T> where T : class, new()
-                {
-                    public const int Answer = 42;
-                    static TypeApiFixture();
-                    public TypeApiFixture();
-                    public void Transform(ref int value, string text = "value");
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
-                    public override bool Equals(object? obj);
-                    public override int GetHashCode();
-                    protected string Name { get; }
-                    public event System.EventHandler? Changed;
-                }
+                public const int Answer = 42;
+                static TypeApiFixture();
+                public TypeApiFixture();
+                public void Transform(ref int value, string text = "value");
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                public override bool Equals(object? obj);
+                public override int GetHashCode();
+                protected string Name { get; }
+                public event EventHandler? Changed;
             }
             """;
 
@@ -53,29 +60,36 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class TypeApiFixture<T> where T : class, new()
             {
-                public class TypeApiFixture<T> where T : class, new()
-                {
-                    public const int Answer = 42;
-                    private int secret;
-                    static TypeApiFixture();
-                    public TypeApiFixture();
-                    public void Transform(ref int value, string text = "value");
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
-                    public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
-                    public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
-                    public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
-                    public override bool Equals(object? obj);
-                    public override int GetHashCode();
-                    internal int GetSecret();
-                    protected string Name { get; private set; }
-                    public event System.EventHandler? Changed;
-                }
+                public const int Answer = 42;
+                private int secret;
+                static TypeApiFixture();
+                public TypeApiFixture();
+                public void Transform(ref int value, string text = "value");
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator +(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator -(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator *(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> operator /(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> right);
+                public static implicit operator string(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                public static explicit operator int(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T> value);
+                public static bool operator ==(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                public static bool operator !=(Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? left, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.TypeApiFixture<T>? right);
+                public override bool Equals(object? obj);
+                public override int GetHashCode();
+                internal int GetSecret();
+                protected string Name { get; private set; }
+                public event EventHandler? Changed;
             }
             """;
 
@@ -86,47 +100,54 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSupportedClassMembers()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
             {
-                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
-                {
-                    public const bool Boolean = true;
-                    public const char Character = 'A';
-                    public const char Apostrophe = '\'';
-                    public const sbyte SignedByte = -1;
-                    public const byte Byte = 2;
-                    public const short Signed16Value = -3;
-                    public const ushort UnsignedShort = 4;
-                    public const int Signed32Value = -5;
-                    public const uint UnsignedInteger = 6;
-                    public const long Signed64Value = -7;
-                    public const ulong UnsignedLong = 8;
-                    public const float Real32Value = 1.5;
-                    public const double Real64Value = 2.5;
-                    public const string Text = "a\\\"b";
-                    public const string Multiline = "a\r\nb";
-                    public const object? Nothing = null;
-                    public static readonly int Shared;
-                    protected internal const int ProtectedValue = 9;
-                    protected const int ProtectedOnly = 10;
-                    static ApiShapeFixture();
-                    protected ApiShapeFixture(T item);
-                    public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new();
-                    public virtual void Update(out int result, ref string text, int count = 3);
-                    protected static T[] CreateItems();
-                    protected internal void ProtectedInternalMethod();
-                    public abstract int Value { get; set; }
-                    public virtual string this[int arg0] { get; protected set; }
-                    public int WriteOnly { set; }
-                    public int[,] Matrix { get; }
-                    public nint NativeInt { get; }
-                    public nuint NativeUInt { get; }
-                    public int* Address { get; }
-                    public delegate* Callback { get; }
-                    public System.Environment.SpecialFolder SpecialFolder { get; }
-                    protected internal int ProtectedInternalProperty { get; }
-                    public abstract event System.EventHandler Changed;
-                }
+                public const bool Boolean = true;
+                public const char Character = 'A';
+                public const char Apostrophe = '\'';
+                public const sbyte SignedByte = -1;
+                public const byte Byte = 2;
+                public const short Signed16Value = -3;
+                public const ushort UnsignedShort = 4;
+                public const int Signed32Value = -5;
+                public const uint UnsignedInteger = 6;
+                public const long Signed64Value = -7;
+                public const ulong UnsignedLong = 8;
+                public const float Real32Value = 1.5;
+                public const double Real64Value = 2.5;
+                public const string Text = "a\\\"b";
+                public const string Multiline = "a\r\nb";
+                public const object? Nothing = null;
+                public static readonly int Shared;
+                protected internal const int ProtectedValue = 9;
+                protected const int ProtectedOnly = 10;
+                static ApiShapeFixture();
+                protected ApiShapeFixture(T item);
+                public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new();
+                public virtual void Update(out int result, ref string text, int count = 3);
+                protected static T[] CreateItems();
+                protected internal void ProtectedInternalMethod();
+                public abstract int Value { get; set; }
+                public virtual string this[int arg0] { get; protected set; }
+                public int WriteOnly { set; }
+                public int[,] Matrix { get; }
+                public nint NativeInt { get; }
+                public nuint NativeUInt { get; }
+                public int* Address { get; }
+                public delegate* Callback { get; }
+                public Environment.SpecialFolder SpecialFolder { get; }
+                protected internal int ProtectedInternalProperty { get; }
+                public abstract event EventHandler Changed;
             }
             """;
 
@@ -137,56 +158,63 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateClassMembers()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
             {
-                public abstract class ApiShapeFixture<T> : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiBaseFixture, Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.IApiContractFixture<int> where T : class, new()
-                {
-                    public const bool Boolean = true;
-                    public const char Character = 'A';
-                    public const char Apostrophe = '\'';
-                    public const sbyte SignedByte = -1;
-                    public const byte Byte = 2;
-                    public const short Signed16Value = -3;
-                    public const ushort UnsignedShort = 4;
-                    public const int Signed32Value = -5;
-                    public const uint UnsignedInteger = 6;
-                    public const long Signed64Value = -7;
-                    public const ulong UnsignedLong = 8;
-                    public const float Real32Value = 1.5;
-                    public const double Real64Value = 2.5;
-                    public const string Text = "a\\\"b";
-                    public const string Multiline = "a\r\nb";
-                    public const object? Nothing = null;
-                    public static readonly int Shared;
-                    protected internal const int ProtectedValue = 9;
-                    protected const int ProtectedOnly = 10;
-                    internal static int Mutable;
-                    private readonly T storedItem;
-                    private protected int state;
-                    static ApiShapeFixture();
-                    protected ApiShapeFixture(T item);
-                    private ApiShapeFixture();
-                    public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new();
-                    public virtual void Update(out int result, ref string text, int count = 3);
-                    protected static T[] CreateItems();
-                    protected internal void ProtectedInternalMethod();
-                    private protected void PrivateProtectedMethod();
-                    private void PrivateMethod();
-                    public abstract int Value { get; set; }
-                    public virtual string this[int arg0] { get; protected set; }
-                    private int HiddenValue { get; set; }
-                    public int WriteOnly { set; }
-                    public int[,] Matrix { get; }
-                    public nint NativeInt { get; }
-                    public nuint NativeUInt { get; }
-                    public int* Address { get; }
-                    public delegate* Callback { get; }
-                    public System.Environment.SpecialFolder SpecialFolder { get; }
-                    protected internal int ProtectedInternalProperty { get; private protected set; }
-                    internal int InternalProperty { get; private set; }
-                    public abstract event System.EventHandler Changed;
-                    private event System.EventHandler Hidden;
-                }
+                public const bool Boolean = true;
+                public const char Character = 'A';
+                public const char Apostrophe = '\'';
+                public const sbyte SignedByte = -1;
+                public const byte Byte = 2;
+                public const short Signed16Value = -3;
+                public const ushort UnsignedShort = 4;
+                public const int Signed32Value = -5;
+                public const uint UnsignedInteger = 6;
+                public const long Signed64Value = -7;
+                public const ulong UnsignedLong = 8;
+                public const float Real32Value = 1.5;
+                public const double Real64Value = 2.5;
+                public const string Text = "a\\\"b";
+                public const string Multiline = "a\r\nb";
+                public const object? Nothing = null;
+                public static readonly int Shared;
+                protected internal const int ProtectedValue = 9;
+                protected const int ProtectedOnly = 10;
+                internal static int Mutable;
+                private readonly T storedItem;
+                private protected int state;
+                static ApiShapeFixture();
+                protected ApiShapeFixture(T item);
+                private ApiShapeFixture();
+                public abstract int Transform<TInput>(in int value, TInput input) where TInput : class, new();
+                public virtual void Update(out int result, ref string text, int count = 3);
+                protected static T[] CreateItems();
+                protected internal void ProtectedInternalMethod();
+                private protected void PrivateProtectedMethod();
+                private void PrivateMethod();
+                public abstract int Value { get; set; }
+                public virtual string this[int arg0] { get; protected set; }
+                private int HiddenValue { get; set; }
+                public int WriteOnly { set; }
+                public int[,] Matrix { get; }
+                public nint NativeInt { get; }
+                public nuint NativeUInt { get; }
+                public int* Address { get; }
+                public delegate* Callback { get; }
+                public Environment.SpecialFolder SpecialFolder { get; }
+                protected internal int ProtectedInternalProperty { get; private protected set; }
+                internal int InternalProperty { get; private set; }
+                public abstract event EventHandler Changed;
+                private event EventHandler Hidden;
             }
             """;
 
@@ -197,14 +225,21 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersInterface()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public interface IApiContractFixture<T> where T : struct
             {
-                public interface IApiContractFixture<T> where T : struct
-                {
-                    T Transform<TInput>(in T value, TInput input) where TInput : class, new();
-                    T Value { get; set; }
-                    event System.EventHandler Changed;
-                }
+                T Transform<TInput>(in T value, TInput input) where TInput : class, new();
+                T Value { get; set; }
+                event EventHandler Changed;
             }
             """;
 
@@ -215,13 +250,20 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStruct()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public struct ApiStructFixture
             {
-                public struct ApiStructFixture
-                {
-                    public ApiStructFixture(int value);
-                    public int Value { get; }
-                }
+                public ApiStructFixture(int value);
+                public int Value { get; }
             }
             """;
 
@@ -232,13 +274,20 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersEnum()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public enum ApiEnumFixture : short
             {
-                public enum ApiEnumFixture : short
-                {
-                    None = -1,
-                    One = 1,
-                }
+                None = -1,
+                One = 1,
             }
             """;
 
@@ -249,10 +298,17 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersDelegate()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
-            {
-                public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, System.IDisposable;
-            }
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public delegate TResult ApiDelegateFixture<T, TResult>(T value) where T : class where TResult : class, IDisposable;
             """;
 
         AssertTypeApi(typeof(ApiDelegateFixture<,>), expected, includePrivate: false);
@@ -262,12 +318,19 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersStaticClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public static class ApiStaticFixture
             {
-                public static class ApiStaticFixture
-                {
-                    public static int Value { get; set; }
-                }
+                public static int Value { get; set; }
             }
             """;
 
@@ -278,13 +341,20 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersInitOnlyProperty()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class ApiInitOnlyFixture
             {
-                public class ApiInitOnlyFixture
-                {
-                    public ApiInitOnlyFixture();
-                    public string Name { get; init; }
-                }
+                public ApiInitOnlyFixture();
+                public string Name { get; init; }
             }
             """;
 
@@ -295,6 +365,14 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersTypeWithoutNamespace()
     {
         var expected = """
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
             public sealed class GlobalApiFixture
             {
                 public GlobalApiFixture();
@@ -308,15 +386,22 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClassAndNestedClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public sealed class TypeApiPublicSample
             {
-                public sealed class TypeApiPublicSample
+                public TypeApiPublicSample();
+                public sealed class PublicNested
                 {
-                    public TypeApiPublicSample();
-                    public sealed class PublicNested
-                    {
-                        public PublicNested();
-                    }
+                    public PublicNested();
                 }
             }
             """;
@@ -328,16 +413,23 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiEscapesKeywordIdentifiers()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class @event<@class> where @class : class
             {
-                public class @event<@class> where @class : class
-                {
-                    public void @lock<@for>(@class @base, @for @while) where @for : @class;
-                    public @event();
-                    public int @namespace { get; set; }
-                    public int @return { get; set; }
-                    public event System.EventHandler? @delegate;
-                }
+                public void @lock<@for>(@class @base, @for @while) where @for : @class;
+                public @event();
+                public int @namespace { get; set; }
+                public int @return { get; set; }
+                public event EventHandler? @delegate;
             }
             """;
 
@@ -348,14 +440,21 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersVirtualOverrideAndSealedOverrideMethods()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiMethodModifierBaseFixture
             {
-                public class ApiMethodModifierDerivedFixture : Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures.ApiMethodModifierBaseFixture
-                {
-                    public sealed override void VirtualMethod();
-                    public override int OverrideMethod();
-                    public ApiMethodModifierDerivedFixture();
-                }
+                public sealed override void VirtualMethod();
+                public override int OverrideMethod();
+                public ApiMethodModifierDerivedFixture();
             }
             """;
 
@@ -366,12 +465,19 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersAbstractClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public abstract class ApiAbstractClassFixture
             {
-                public abstract class ApiAbstractClassFixture
-                {
-                    protected ApiAbstractClassFixture();
-                }
+                protected ApiAbstractClassFixture();
             }
             """;
 
@@ -382,12 +488,19 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersSealedClass()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public sealed class ApiSealedClassFixture
             {
-                public sealed class ApiSealedClassFixture
-                {
-                    public ApiSealedClassFixture();
-                }
+                public ApiSealedClassFixture();
             }
             """;
 
@@ -451,12 +564,19 @@ public sealed class NuGetTypeApiReaderTests
 
         Assert.NotNull(api);
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            internal sealed class TypeApiHiddenSample
             {
-                internal sealed class TypeApiHiddenSample
-                {
-                    public TypeApiHiddenSample();
-                }
+                public TypeApiHiddenSample();
             }
             """;
 
@@ -500,20 +620,27 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPublicNestedTypes()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class ApiNestedFixture
             {
-                public class ApiNestedFixture
+                public ApiNestedFixture();
+                public interface IPublicNested
                 {
-                    public ApiNestedFixture();
-                    public interface IPublicNested
-                    {
-                    }
-                    protected interface IProtectedNested
-                    {
-                    }
-                    protected internal interface IProtectedInternalNested
-                    {
-                    }
+                }
+                protected interface IProtectedNested
+                {
+                }
+                protected internal interface IProtectedInternalNested
+                {
                 }
             }
             """;
@@ -525,29 +652,36 @@ public sealed class NuGetTypeApiReaderTests
     public void ReadTypeApiRendersPrivateNestedTypes()
     {
         var expected = """
-            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures
+            using System;
+            using System.Collections.Generic;
+            using System.IO;
+            using System.Linq;
+            using System.Net.Http;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace Raiqub.NuScope.Tests.Features.GetTypeApi.Fixtures;
+
+            public class ApiNestedFixture
             {
-                public class ApiNestedFixture
+                public ApiNestedFixture();
+                public interface IPublicNested
                 {
-                    public ApiNestedFixture();
-                    public interface IPublicNested
-                    {
-                    }
-                    protected interface IProtectedNested
-                    {
-                    }
-                    protected internal interface IProtectedInternalNested
-                    {
-                    }
-                    private protected interface IPrivateProtectedNested
-                    {
-                    }
-                    internal interface IInternalNested
-                    {
-                    }
-                    private interface IHiddenNested
-                    {
-                    }
+                }
+                protected interface IProtectedNested
+                {
+                }
+                protected internal interface IProtectedInternalNested
+                {
+                }
+                private protected interface IPrivateProtectedNested
+                {
+                }
+                internal interface IInternalNested
+                {
+                }
+                private interface IHiddenNested
+                {
                 }
             }
             """;

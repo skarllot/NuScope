@@ -105,6 +105,8 @@ Use the standard MCP server configuration:
   and dependency details.
 - `nuget_list_types`: Lists types in package assemblies for a target framework, with optional name filtering.
 - `nuget_get_type_api`: Returns a type's C# API declaration from a package assembly for a target framework.
+- `dll_list_types`: Lists types in a local DLL, with optional name filtering.
+- `dll_get_type_api`: Returns a type's C# API declaration from a local DLL.
 
 ## Development
 
