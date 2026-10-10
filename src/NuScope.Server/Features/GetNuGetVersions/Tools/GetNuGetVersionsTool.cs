@@ -29,10 +29,17 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
         [Description(
             "Dependency detail to include: 'targetFrameworks' for dependency group target frameworks only, or 'full' for target frameworks and dependencies."
         )]
-            NuGetVersionsIncludeDependency? includeDependency = null
+            NuGetVersionsIncludeDependency? includeDependency = null,
+        [Description("The inclusive maximum major version to return, for example 10.")] int? maximumMajor = null
     )
     {
-        var result = metadataService.GetNuGetPackageVersions(packageName, minimumMajor, includePreRelease, maxItems);
+        var result = metadataService.GetNuGetPackageVersions(
+            packageName,
+            minimumMajor,
+            includePreRelease,
+            maxItems,
+            maximumMajor
+        );
         if (result.Problem is not null)
         {
             return result.Problem.ToCallToolResult();

@@ -593,6 +593,112 @@ public sealed class NuGetOrgPackageMetadataClientTests
         Assert.Equal(["13.0.3", "12.0.1"], result.Versions);
     }
 
+    [Theory]
+    [InlineData(null, 2, false, new[] { "2.1.0", "2.0.0", "1.0.0", "0.9.0" })]
+    [InlineData(1, 2, false, new[] { "2.1.0", "2.0.0", "1.0.0" })]
+    [InlineData(2, 2, true, new[] { "2.1.0", "2.1.0-beta", "2.0.0" })]
+    [InlineData(null, 0, false, new[] { "0.9.0" })]
+    public void GetNuGetPackageVersionsFiltersRemoteVersionsByInclusiveMajorRange(
+        int? minimumMajor,
+        int maximumMajor,
+        bool includePreRelease,
+        string[] expectedVersions
+    )
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    { "versions": ["3.0.0", "2.1.0-beta", "invalid", "1.0.0", "2.0.0", "0.9.0", "2.1.0"] }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            }
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions(
+            "Newtonsoft.Json",
+            minimumMajor: minimumMajor,
+            maximumMajor: maximumMajor,
+            includePreRelease: includePreRelease
+        );
+
+        Assert.Null(result.Problem);
+        Assert.Equal(expectedVersions, result.Versions);
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsFiltersRemoteVersionsBeforeLimiting()
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    { "versions": ["1.0.0", "2.0.0", "2.1.0", "3.0.0", "4.0.0"] }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            }
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Newtonsoft.Json", minimumMajor: 2, maximumMajor: 2, maxItems: 1);
+
+        Assert.Null(result.Problem);
+        Assert.Equal(["2.1.0"], result.Versions);
+    }
+
+    [Theory]
+    [InlineData(null, "major version <= 2")]
+    [InlineData(1, "major version >= 1 and <= 2")]
+    public void GetNuGetPackageVersionsReportsMajorRangeWhenRemoteVersionsAreFilteredOut(
+        int? minimumMajor,
+        string detail
+    )
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            request.RequestUri!.AbsoluteUri switch
+            {
+                "https://api.nuget.org/v3/index.json" => JsonResponse(ServiceIndexJson),
+                "https://api.nuget.org/v3-flatcontainer/newtonsoft.json/index.json" => JsonResponse(
+                    """
+                    { "versions": ["3.0.0"] }
+                    """
+                ),
+                _ => throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}"),
+            }
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var result = client.GetNuGetPackageVersions("Newtonsoft.Json", minimumMajor: minimumMajor, maximumMajor: 2);
+
+        Assert.Null(result.Versions);
+        Assert.Equal(404, result.Problem!.Status);
+        Assert.Contains(detail, result.Problem.Detail);
+    }
+
+    [Theory]
+    [InlineData(null, -1)]
+    [InlineData(2, 1)]
+    public void GetNuGetPackageVersionsRejectsInvalidMaximumMajor(int? minimumMajor, int maximumMajor)
+    {
+        var handler = new StubHttpMessageHandler(request =>
+            throw new Xunit.Sdk.XunitException($"Unexpected URI: {request.RequestUri}")
+        );
+        var client = new NuGetOrgPackageMetadataClient(new HttpClient(handler), new NuGetPackageMetadataParser());
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            client.GetNuGetPackageVersions("Newtonsoft.Json", minimumMajor: minimumMajor, maximumMajor: maximumMajor)
+        );
+
+        Assert.Equal("maximumMajor", exception.ParamName);
+    }
+
     [Fact]
     public void GetNuGetPackageVersionsReturnsServiceUnavailableWhenServiceIndexFails()
     {

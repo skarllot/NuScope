@@ -10,6 +10,7 @@ public interface INuGetRemotePackageMetadataClient
         string packageName,
         int? minimumMajor = null,
         bool includePreRelease = false,
-        int? maxItems = null
+        int? maxItems = null,
+        int? maximumMajor = null
     );
 }

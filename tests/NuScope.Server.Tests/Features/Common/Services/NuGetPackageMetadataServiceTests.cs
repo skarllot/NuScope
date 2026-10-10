@@ -614,6 +614,108 @@ public sealed class NuGetPackageMetadataServiceTests
         Assert.Equal(["3.0.0", "2.0.0"], result.Versions);
     }
 
+    [Theory]
+    [InlineData(null, 2, false, new[] { "2.1.0", "2.0.0", "1.0.0", "0.9.0" })]
+    [InlineData(1, 2, false, new[] { "2.1.0", "2.0.0", "1.0.0" })]
+    [InlineData(2, 2, true, new[] { "2.1.0", "2.1.0-beta", "2.0.0" })]
+    [InlineData(null, 0, false, new[] { "0.9.0" })]
+    public void GetNuGetPackageVersionsFiltersLocalVersionsByInclusiveMajorRange(
+        int? minimumMajor,
+        int maximumMajor,
+        bool includePreRelease,
+        string[] expectedVersions
+    )
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Versions");
+        var fileSystem = new MockFileSystem();
+        foreach (var version in new[] { "0.9.0", "1.0.0", "2.0.0", "2.1.0", "2.1.0-beta", "3.0.0", "invalid" })
+        {
+            fileSystem.AddDirectory(Path.Combine(packageRootDirectory, version));
+        }
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser()
+        ).GetNuGetPackageVersions(
+            "Package.With.Versions",
+            minimumMajor: minimumMajor,
+            maximumMajor: maximumMajor,
+            includePreRelease: includePreRelease
+        );
+
+        Assert.Null(result.Problem);
+        Assert.Equal(expectedVersions, result.Versions);
+    }
+
+    [Fact]
+    public void GetNuGetPackageVersionsFiltersMergedVersionsBeforeLimitingAndForwardsMaximumMajor()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Versions");
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "2.0.0"));
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "4.0.0"));
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.Found(["1.0.0", "2.0.0", "2.1.0", "3.0.0", "5.0.0"])
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageVersions("Package.With.Versions", minimumMajor: 2, maximumMajor: 3, maxItems: 2);
+
+        Assert.Null(result.Problem);
+        Assert.Equal(["3.0.0", "2.1.0"], result.Versions);
+        Assert.Equal(2, remoteClient.MinimumMajor);
+        Assert.Equal(3, remoteClient.MaximumMajor);
+        Assert.Equal(2, remoteClient.MaxItems);
+    }
+
+    [Theory]
+    [InlineData(null, "major version <= 2")]
+    [InlineData(1, "major version >= 1 and <= 2")]
+    public void GetNuGetPackageVersionsReportsMajorRangeWhenNoVersionMatches(int? minimumMajor, string detail)
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Package.With.Versions");
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddDirectory(Path.Combine(packageRootDirectory, "3.0.0"));
+        var remoteClient = new RecordingRemotePackageMetadataClient(
+            versionsResult: NuGetPackageVersionsLookup.Found(["4.0.0"])
+        );
+
+        var result = new NuGetPackageMetadataService(
+            fileSystem,
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        ).GetNuGetPackageVersions("Package.With.Versions", minimumMajor: minimumMajor, maximumMajor: 2);
+
+        AssertVersionsProblem(result, ProblemTypes.NotFound, 404, detail);
+    }
+
+    [Theory]
+    [InlineData(null, -1)]
+    [InlineData(2, 1)]
+    public void GetNuGetPackageVersionsRejectsInvalidMaximumMajor(int? minimumMajor, int maximumMajor)
+    {
+        var remoteClient = new RecordingRemotePackageMetadataClient();
+        var service = new NuGetPackageMetadataService(
+            new MockFileSystem(),
+            new RecordingNuGetPackageMetadataParser(),
+            remoteClient
+        );
+
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            service.GetNuGetPackageVersions(
+                "Package.With.Versions",
+                minimumMajor: minimumMajor,
+                maximumMajor: maximumMajor
+            )
+        );
+
+        Assert.Equal("maximumMajor", exception.ParamName);
+        Assert.Null(remoteClient.VersionsPackageName);
+    }
+
     [Fact]
     public void GetNuGetPackageVersionsReturnsNotFoundWhenPackageIsAbsentOrFilteredOut()
     {
@@ -913,6 +1015,8 @@ public sealed class NuGetPackageMetadataServiceTests
 
         public int? MinimumMajor { get; private set; }
 
+        public int? MaximumMajor { get; private set; }
+
         public bool IncludePreRelease { get; private set; }
 
         public int? MaxItems { get; private set; }
@@ -934,11 +1038,13 @@ public sealed class NuGetPackageMetadataServiceTests
             string packageName,
             int? minimumMajor = null,
             bool includePreRelease = false,
-            int? maxItems = null
+            int? maxItems = null,
+            int? maximumMajor = null
         )
         {
             VersionsPackageName = packageName;
             MinimumMajor = minimumMajor;
+            MaximumMajor = maximumMajor;
             IncludePreRelease = includePreRelease;
             MaxItems = maxItems;
             return VersionsResult;

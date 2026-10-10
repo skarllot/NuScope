@@ -126,7 +126,8 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
         string packageName,
         int? minimumMajor = null,
         bool includePreRelease = false,
-        int? maxItems = null
+        int? maxItems = null,
+        int? maximumMajor = null
     )
     {
         if (minimumMajor < 0)
@@ -135,6 +136,24 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
                 nameof(minimumMajor),
                 minimumMajor,
                 "Minimum major must be non-negative."
+            );
+        }
+
+        if (maximumMajor < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMajor),
+                maximumMajor,
+                "Maximum major must be non-negative."
+            );
+        }
+
+        if (maximumMajor < minimumMajor)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMajor),
+                maximumMajor,
+                "Maximum major must be greater than or equal to minimum major."
             );
         }
 
@@ -191,6 +210,7 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
                     version.Parsed is not null
                     && (includePreRelease || version.Parsed.Prerelease is null)
                     && (minimumMajor is null || version.Parsed.Release[0] >= minimumMajor.Value)
+                    && (maximumMajor is null || version.Parsed.Release[0] <= maximumMajor.Value)
                 )
                 .GroupBy(version => version.Version, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.First())
@@ -205,7 +225,9 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             var limitedVersions = validVersions.ToArray();
 
             return limitedVersions.Length == 0
-                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                ? NuGetPackageVersionsLookup.NotFound(
+                    GetVersionsNotFoundDetail(packageName, minimumMajor, maximumMajor)
+                )
                 : NuGetPackageVersionsLookup.Found(limitedVersions);
         }
         catch (HttpRequestException exception)
@@ -343,8 +365,15 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
             ?.Version;
     }
 
-    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor)
+    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor, int? maximumMajor = null)
     {
+        if (maximumMajor is not null)
+        {
+            return minimumMajor is null
+                ? $"Package '{packageName}' versions with major version <= {maximumMajor.Value} were not found on nuget.org."
+                : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} and <= {maximumMajor.Value} were not found on nuget.org.";
+        }
+
         return minimumMajor is null
             ? $"Package '{packageName}' versions were not found on nuget.org."
             : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} were not found on nuget.org.";

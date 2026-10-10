@@ -97,6 +97,24 @@ Use the standard MCP server configuration:
 }
 ```
 
+## Find versions in a major version range
+
+Use `get_nuget_versions` with `minimumMajor` and `maximumMajor` to search an inclusive
+major version range. Either bound can be omitted. For example, these arguments return
+the latest stable version of `Newtonsoft.Json` with a major version from 12 through 13:
+
+```json
+{
+  "packageName": "Newtonsoft.Json",
+  "minimumMajor": 12,
+  "maximumMajor": 13,
+  "maxItems": 1
+}
+```
+
+The bounds apply to versions from both the local NuGet cache and nuget.org before the
+result limit. Set `includePreRelease` to `true` to include prerelease versions.
+
 ## Development
 
 ```powershell
