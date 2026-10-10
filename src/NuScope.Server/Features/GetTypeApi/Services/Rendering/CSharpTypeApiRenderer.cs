@@ -35,14 +35,10 @@ internal sealed class CSharpTypeApiRenderer
         var builder = new StringBuilder();
         if (!string.IsNullOrEmpty(@namespace))
         {
-            builder.Append("namespace ").AppendLine(@namespace).AppendLine("{");
-            RenderType(builder, handle, 1);
-            builder.AppendLine("}");
+            builder.Append("namespace ").Append(@namespace).AppendLine(";").AppendLine();
         }
-        else
-        {
-            RenderType(builder, handle, 0);
-        }
+
+        RenderType(builder, handle, 0);
 
         return builder.ToString();
     }

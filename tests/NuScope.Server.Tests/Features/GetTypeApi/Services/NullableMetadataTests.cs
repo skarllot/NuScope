@@ -38,7 +38,7 @@ public sealed class NullableMetadataTests
         var api = new NuGetTypeApiReader().ReadTypeApi(stream, "Example.Sample", false);
 
         Assert.Equal(
-            "namespace Example\n{\n    public class Sample\n    {\n        public " + fieldType + " Items;\n    }\n}\n",
+            "namespace Example;\n\npublic class Sample\n{\n    public " + fieldType + " Items;\n}\n",
             api?.ReplaceLineEndings("\n")
         );
     }

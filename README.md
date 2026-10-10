@@ -105,6 +105,14 @@ Use the standard MCP server configuration:
   and dependency details.
 - `nuget_list_types`: Lists types in package assemblies for a target framework, with optional name filtering.
 - `nuget_get_type_api`: Returns a type's C# API declaration from a package assembly for a target framework.
+- `dll_list_types`: Lists types in a local DLL, with optional name filtering, private types, and exported types.
+- `dll_get_type_api`: Returns a type's C# API declaration from a local DLL, optionally including private members.
+
+The DLL tools accept `dllPath`, either absolute or relative to the server's working directory.
+They read assembly metadata without loading or executing code and use the same output formats as the NuGet tools.
+`dll_list_types` supports `filterRegex`, `includePrivate`, and `includeExported`.
+`dll_get_type_api` requires `fullTypeName` (including namespace, nested type `+` separators, and generic arity)
+and supports `includePrivate`.
 
 ## Development
 

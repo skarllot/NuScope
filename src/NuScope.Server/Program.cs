@@ -28,6 +28,7 @@ builder.Services.AddSingleton<INuGetAssemblyTypeReader, NuGetAssemblyTypeReader>
 builder.Services.AddSingleton<INuGetPackageTypeListingService, NuGetPackageTypeListingService>();
 builder.Services.AddSingleton<INuGetTypeApiReader, NuGetTypeApiReader>();
 builder.Services.AddSingleton<INuGetPackageTypeApiService, NuGetPackageTypeApiService>();
+builder.Services.AddSingleton<IDllMetadataService, DllMetadataService>();
 
 builder
     .Services.AddMcpServer()
@@ -36,6 +37,8 @@ builder
     .WithTools<GetNuGetUrlsTool>()
     .WithTools<GetNuGetVersionsTool>()
     .WithTools<NuGetGetTypeApiTool>()
+    .WithTools<DllGetTypeApiTool>()
+    .WithTools<DllListTypesTool>()
     .WithTools<NuGetListTypesTool>();
 
 await builder.Build().RunAsync();
