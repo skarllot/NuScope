@@ -180,13 +180,23 @@ public sealed class DllMetadataToolsTests
         Assert.Contains("timed out", result.StructuredContent!.Value.Deserialize<NuGetProblemDetailsResult>()!.Detail);
     }
 
-    [Fact]
-    public void GetTypeApiRejectsMissingNameAndReportsMissingType()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void GetTypeApiRejectsMissingNameAndReportsMissingType(bool includePrivate)
     {
         var tool = new DllGetTypeApiTool(CreateService());
 
         AssertProblem(tool.GetTypeApi(DllPath, " "), 400);
-        AssertProblem(tool.GetTypeApi(DllPath, "Missing.Type"), 404);
+        var result = tool.GetTypeApi(DllPath, "Missing.Type", includePrivate);
+        AssertProblem(result, 404);
+        var problem = result.StructuredContent!.Value.Deserialize<NuGetProblemDetailsResult>()!;
+        Assert.Equal(
+            includePrivate
+                ? $"Type 'Missing.Type' was not found in DLL '{DllPath}'."
+                : $"Type 'Missing.Type' was not found in DLL '{DllPath}', or it is not public.",
+            problem.Detail
+        );
     }
 
     private static DllMetadataService CreateService(byte[]? bytes = null)

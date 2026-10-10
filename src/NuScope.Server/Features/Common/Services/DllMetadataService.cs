@@ -72,7 +72,9 @@ public sealed class DllMetadataService(
                     ? NuGetTypeApiLookup.Found(fileSystem.Path.GetFileName(path), api)
                     : NuGetTypeApiLookup.FromProblem(
                         NuGetProblemDetailsResult.NotFound(
-                            $"Type '{fullTypeName}' was not found in DLL '{path}', or it is not public."
+                            includePrivate
+                                ? $"Type '{fullTypeName}' was not found in DLL '{path}'."
+                                : $"Type '{fullTypeName}' was not found in DLL '{path}', or it is not public."
                         )
                     );
             },
