@@ -13,6 +13,24 @@ namespace Raiqub.NuScope.Tests.Features.GetNuGetVersions.Tools;
 public sealed class GetNuGetVersionsToolTests
 {
     [Fact]
+    public void GetNuGetVersionsReturnsLatestVersionInInclusiveMajorRange()
+    {
+        var packageRootDirectory = GetPackageRootDirectory("Newtonsoft.Json");
+        var fileSystem = new MockFileSystem();
+        foreach (var version in new[] { "11.0.0", "12.0.1", "13.0.3", "13.1.0", "14.0.0" })
+        {
+            fileSystem.AddDirectory(Path.Combine(packageRootDirectory, version));
+        }
+
+        var result = new GetNuGetVersionsTool(
+            new NuGetPackageMetadataService(fileSystem, new NuGetPackageMetadataParser())
+        ).GetNuGetVersions("Newtonsoft.Json", minimumMajor: 12, maximumMajor: 13, maxItems: 1);
+
+        var success = CallToolResultAssertions.DeserializeSuccessfulContent<NuGetVersionItem[]>(result);
+        Assert.Equal(["13.1.0"], success.Select(item => item.Version).ToArray());
+    }
+
+    [Fact]
     public void GetNuGetVersionsReturnsVersionsResultWhenPackageExists()
     {
         var packageRootDirectory = GetPackageRootDirectory("Newtonsoft.Json");
@@ -347,6 +365,7 @@ public sealed class GetNuGetVersionsToolTests
         public NuGetPackageVersionsLookup GetNuGetPackageVersions(
             string packageName,
             int? minimumMajor = null,
+            int? maximumMajor = null,
             bool includePreRelease = false,
             int? maxItems = null
         )

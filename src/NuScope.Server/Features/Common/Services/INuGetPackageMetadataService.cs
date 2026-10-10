@@ -9,6 +9,7 @@ public interface INuGetPackageMetadataService
     NuGetPackageVersionsLookup GetNuGetPackageVersions(
         string packageName,
         int? minimumMajor = null,
+        int? maximumMajor = null,
         bool includePreRelease = false,
         int? maxItems = null
     );
