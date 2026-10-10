@@ -125,9 +125,9 @@ public sealed class NuGetOrgPackageMetadataClient(HttpClient httpClient, INuGetP
     public NuGetPackageVersionsLookup GetNuGetPackageVersions(
         string packageName,
         int? minimumMajor = null,
+        int? maximumMajor = null,
         bool includePreRelease = false,
-        int? maxItems = null,
-        int? maximumMajor = null
+        int? maxItems = null
     )
     {
         if (minimumMajor < 0)

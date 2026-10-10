@@ -54,9 +54,9 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     public NuGetPackageVersionsLookup GetNuGetPackageVersions(
         string packageName,
         int? minimumMajor = null,
+        int? maximumMajor = null,
         bool includePreRelease = false,
-        int? maxItems = null,
-        int? maximumMajor = null
+        int? maxItems = null
     )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
@@ -68,9 +68,9 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         var remoteLookup = remoteMetadataClient.GetNuGetPackageVersions(
             packageName,
             minimumMajor,
+            maximumMajor,
             includePreRelease,
-            maxItems,
-            maximumMajor
+            maxItems
         );
 
         if (localLookup.Versions is not null || remoteLookup.Versions is not null)
@@ -389,9 +389,9 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         public NuGetPackageVersionsLookup GetNuGetPackageVersions(
             string packageName,
             int? minimumMajor = null,
+            int? maximumMajor = null,
             bool includePreRelease = false,
-            int? maxItems = null,
-            int? maximumMajor = null
+            int? maxItems = null
         )
         {
             return NuGetPackageVersionsLookup.NotFound(

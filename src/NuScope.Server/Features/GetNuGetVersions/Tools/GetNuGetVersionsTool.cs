@@ -21,6 +21,7 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
     public CallToolResult GetNuGetVersions(
         [Description("The NuGet package id, for example 'Newtonsoft.Json'.")] string packageName,
         [Description("The inclusive minimum major version to return, for example 8.")] int? minimumMajor = null,
+        [Description("The inclusive maximum major version to return, for example 10.")] int? maximumMajor = null,
         [Description("Whether to include prerelease versions such as '1.0.0-beta'.")] bool includePreRelease = false,
         [Description(
             "The maximum number of versions to return. If omitted, the latest 5 matching versions are returned."
@@ -29,16 +30,15 @@ public sealed class GetNuGetVersionsTool(INuGetPackageMetadataService metadataSe
         [Description(
             "Dependency detail to include: 'targetFrameworks' for dependency group target frameworks only, or 'full' for target frameworks and dependencies."
         )]
-            NuGetVersionsIncludeDependency? includeDependency = null,
-        [Description("The inclusive maximum major version to return, for example 10.")] int? maximumMajor = null
+            NuGetVersionsIncludeDependency? includeDependency = null
     )
     {
         var result = metadataService.GetNuGetPackageVersions(
             packageName,
             minimumMajor,
+            maximumMajor,
             includePreRelease,
-            maxItems,
-            maximumMajor
+            maxItems
         );
         if (result.Problem is not null)
         {
