@@ -94,18 +94,38 @@ internal static class CSharpApiModifiers
 
     public static void AppendMethodModifiers(StringBuilder builder, MethodAttributes attributes, bool isInterface)
     {
-        if ((attributes & MethodAttributes.Static) != 0)
+        var isStatic = (attributes & MethodAttributes.Static) != 0;
+        var isAbstract = (attributes & MethodAttributes.Abstract) != 0;
+        var isVirtual = (attributes & MethodAttributes.Virtual) != 0;
+        if (isStatic)
         {
             builder.Append("static ");
         }
 
         if (isInterface)
         {
+            // Ordinary abstract instance members use the implicit interface modifier.
+            // Interface implementations use MethodImpl metadata, not class override syntax.
+            if (isAbstract && isStatic)
+            {
+                builder.Append("abstract ");
+            }
+            else if (isVirtual && !isAbstract && (attributes & MethodAttributes.Final) == 0)
+            {
+                builder.Append("virtual ");
+            }
+            else if (
+                !isStatic
+                && !isAbstract
+                && (attributes & MethodAttributes.MemberAccessMask) == MethodAttributes.Public
+            )
+            {
+                builder.Append("sealed ");
+            }
+
             return;
         }
 
-        var isAbstract = (attributes & MethodAttributes.Abstract) != 0;
-        var isVirtual = (attributes & MethodAttributes.Virtual) != 0;
         var isOverride = isVirtual && (attributes & MethodAttributes.NewSlot) == 0;
         var isSealedOverride = isOverride && (attributes & MethodAttributes.Final) != 0;
         if (isAbstract)
