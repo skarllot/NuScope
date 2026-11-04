@@ -25,7 +25,12 @@
 ## GitHub workflow
 - Use Conventional Commits for commit messages and pull request titles.
 - Write pull request descriptions in Markdown.
-- Ask to bump version for branch if not already.
+- Always base version-bump decisions on the latest release tag from the remote repository, comparing its
+  version with `version.json`. Query remote tags (for example, `git ls-remote --tags origin`) and select
+  the highest release version using semantic version ordering; local tags may be stale or incomplete.
+- If the configured version is ahead of the latest release tag, it is not released yet; keep it unchanged
+  and do not ask for another bump. For example, configured `1.4` with latest tag `v1.3.9` stays `1.4`.
+- Ask about a branch version bump only when the configured version is not ahead of the latest release tag.
 
 ## Style and tests
 - Formatting is CSharpier via the restored local tool; CI runs `dotnet csharpier check .`.

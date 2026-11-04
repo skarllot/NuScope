@@ -16,10 +16,12 @@ internal sealed class SignatureTypeNameProvider : ISignatureTypeProvider<string,
     public string GetFunctionPointerType(MethodSignature<string> signature) => "delegate*";
 
     public string GetGenericInstantiation(string genericType, ImmutableArray<string> typeArguments) =>
-        string.Create(
-            CultureInfo.InvariantCulture,
-            $"{RemoveGenericArity(genericType)}<{string.Join(", ", typeArguments)}>"
-        );
+        genericType == "System.Nullable`1" && typeArguments.Length == 1
+            ? string.Create(CultureInfo.InvariantCulture, $"{typeArguments[0]}?")
+            : string.Create(
+                CultureInfo.InvariantCulture,
+                $"{RemoveGenericArity(genericType)}<{string.Join(", ", typeArguments)}>"
+            );
 
     public string GetGenericMethodParameter(GenericContext genericContext, int index) =>
         index < genericContext.MethodParameters.Length

@@ -43,6 +43,7 @@ public class NullableApiFields
     {
         public static string Echo(string value) => value;
     }
+
 #nullable restore
 }
 

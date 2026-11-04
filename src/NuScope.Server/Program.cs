@@ -2,6 +2,7 @@ using System.IO.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Raiqub.NuScope.Features.Common.Extensions;
 using Raiqub.NuScope.Features.Common.Services;
 using Raiqub.NuScope.Features.GetNuGetMetadata.Tools;
 using Raiqub.NuScope.Features.GetNuGetUrls.Tools;
@@ -28,6 +29,7 @@ builder.Services.AddSingleton<INuGetAssemblyTypeReader, NuGetAssemblyTypeReader>
 builder.Services.AddSingleton<INuGetPackageTypeListingService, NuGetPackageTypeListingService>();
 builder.Services.AddSingleton<INuGetTypeApiReader, NuGetTypeApiReader>();
 builder.Services.AddSingleton<INuGetPackageTypeApiService, NuGetPackageTypeApiService>();
+builder.Services.AddSingleton<IDllMetadataService, DllMetadataService>();
 
 builder
     .Services.AddMcpServer()
@@ -36,7 +38,10 @@ builder
     .WithTools<GetNuGetUrlsTool>()
     .WithTools<GetNuGetVersionsTool>()
     .WithTools<NuGetGetTypeApiTool>()
-    .WithTools<NuGetListTypesTool>();
+    .WithTools<DllGetTypeApiTool>()
+    .WithTools<DllListTypesTool>()
+    .WithTools<NuGetListTypesTool>()
+    .WithPortableToolSchemas();
 
 await builder.Build().RunAsync();
 

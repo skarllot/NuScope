@@ -22,7 +22,7 @@ Use the NuGet package ID (`Raiqub.NuScope`) in the command arguments:
     "nuscope": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["Raiqub.NuScope", "--yes"]
+      "args": ["Raiqub.NuScope"]
     }
   }
 }
@@ -40,7 +40,7 @@ Add NuScope to `claude_desktop_config.json`:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuScope", "--yes"]
+      "args": ["Raiqub.NuScope"]
     }
   }
 }
@@ -61,7 +61,7 @@ Add NuScope to `.vscode/mcp.json`:
     "nuscope": {
       "type": "stdio",
       "command": "dnx",
-      "args": ["Raiqub.NuScope", "--yes"]
+      "args": ["Raiqub.NuScope"]
     }
   }
 }
@@ -76,7 +76,7 @@ Add NuScope to `.cursor/mcp.json`:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuScope", "--yes"]
+      "args": ["Raiqub.NuScope"]
     }
   }
 }
@@ -91,11 +91,22 @@ Use the standard MCP server configuration:
   "mcpServers": {
     "nuscope": {
       "command": "dnx",
-      "args": ["Raiqub.NuScope", "--yes"]
+      "args": ["Raiqub.NuScope"]
     }
   }
 }
 ```
+
+## Available tools
+
+- `get_nuget_metadata`: Reads package metadata, including dependencies and repository details.
+- `get_nuget_urls`: Extracts project, repository, and other URLs from package metadata.
+- `get_nuget_versions`: Lists versions from the local cache and nuget.org, with optional version filters
+  and dependency details.
+- `nuget_list_types`: Lists types in package assemblies for a target framework, with optional name filtering.
+- `nuget_get_type_api`: Returns a type's C# API declaration from a package assembly for a target framework.
+- `dll_list_types`: Lists types in a local DLL, with optional name filtering.
+- `dll_get_type_api`: Returns a type's C# API declaration from a local DLL.
 
 ## Development
 

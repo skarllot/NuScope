@@ -30,18 +30,31 @@ internal sealed class NullableTypeProvider : ISignatureTypeProvider<NullableType
 
     public NullableType GetFunctionPointerType(MethodSignature<NullableType> signature) => new("delegate*", true);
 
-    public NullableType GetGenericInstantiation(NullableType genericType, ImmutableArray<NullableType> typeArguments) =>
-        new(
+    public NullableType GetGenericInstantiation(NullableType genericType, ImmutableArray<NullableType> typeArguments)
+    {
+        if (genericType.Name == "System.Nullable`1" && typeArguments.Length == 1)
+        {
+            // Nullable<T> wraps a value type even when T is represented by a generic parameter.
+            // The wrapper and a value-type parameter do not consume reference-nullability flags.
+            var underlyingType = typeArguments[0] with
+            {
+                IsValueType = true,
+            };
+            return new(genericType.Name, true, next => underlyingType.Render(next) + "?");
+        }
+
+        return new(
             genericType.Name,
             genericType.IsValueType,
             next =>
             {
-                var flag = genericType.Name == "System.Nullable`1" ? (byte)0 : next();
+                var flag = next();
                 var arguments = typeArguments.Select(argument => argument.Render(next)).ToImmutableArray();
                 return names.GetGenericInstantiation(genericType.Name, arguments)
                     + (!genericType.IsValueType && flag == 2 ? "?" : "");
             }
         );
+    }
 
     public NullableType GetGenericMethodParameter(GenericContext genericContext, int index) =>
         new(names.GetGenericMethodParameter(genericContext, index));

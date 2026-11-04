@@ -54,18 +54,21 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     public NuGetPackageVersionsLookup GetNuGetPackageVersions(
         string packageName,
         int? minimumMajor = null,
+        int? maximumMajor = null,
         bool includePreRelease = false,
         int? maxItems = null
     )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
         ThrowIfNegative(minimumMajor);
+        ThrowIfInvalidMaximumMajor(minimumMajor, maximumMajor);
         ThrowIfNotPositive(maxItems);
 
-        var localLookup = GetLocalNuGetPackageVersions(packageName, minimumMajor, includePreRelease);
+        var localLookup = GetLocalNuGetPackageVersions(packageName, minimumMajor, maximumMajor, includePreRelease);
         var remoteLookup = remoteMetadataClient.GetNuGetPackageVersions(
             packageName,
             minimumMajor,
+            maximumMajor,
             includePreRelease,
             maxItems
         );
@@ -76,11 +79,14 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 localLookup.Versions ?? [],
                 remoteLookup.Versions ?? [],
                 minimumMajor,
+                maximumMajor,
                 includePreRelease,
                 maxItems
             );
             return versions.Length == 0
-                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                ? NuGetPackageVersionsLookup.NotFound(
+                    GetVersionsNotFoundDetail(packageName, minimumMajor, maximumMajor)
+                )
                 : NuGetPackageVersionsLookup.Found(versions);
         }
 
@@ -94,7 +100,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
             return localLookup;
         }
 
-        return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor));
+        return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor, maximumMajor));
     }
 
     private LocalNuGetPackageMetadataLookup GetLocalNuGetPackageMetadata(string packageName, string version)
@@ -181,6 +187,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         var localVersionsLookup = GetLocalNuGetPackageVersions(
             packageName,
             minimumMajor: null,
+            maximumMajor: null,
             includePreRelease: true
         );
         if (localVersionsLookup.Problem is { Status: not 404 })
@@ -200,6 +207,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 localVersionsLookup.Versions ?? [],
                 remoteVersionsLookup.Versions ?? [],
                 minimumMajor: null,
+                maximumMajor: null,
                 includePreRelease: true,
                 maxItems: 1
             );
@@ -219,6 +227,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
     private NuGetPackageVersionsLookup GetLocalNuGetPackageVersions(
         string packageName,
         int? minimumMajor,
+        int? maximumMajor,
         bool includePreRelease
     )
     {
@@ -237,13 +246,15 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
                 .Select(fileSystem.Path.GetFileName)
                 .OfType<string>()
                 .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
-                .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease))
+                .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, maximumMajor, includePreRelease))
                 .OrderByDescending(version => version.Parsed)
                 .Select(version => version.Version)
                 .ToArray();
 
             return versions.Length == 0
-                ? NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor))
+                ? NuGetPackageVersionsLookup.NotFound(
+                    GetVersionsNotFoundDetail(packageName, minimumMajor, maximumMajor)
+                )
                 : NuGetPackageVersionsLookup.Found(versions);
         }
         catch (UnauthorizedAccessException)
@@ -268,6 +279,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         IReadOnlyList<string> localVersions,
         IReadOnlyList<string> remoteVersions,
         int? minimumMajor,
+        int? maximumMajor,
         bool includePreRelease,
         int? maxItems
     )
@@ -275,7 +287,7 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         var versions = localVersions
             .Concat(remoteVersions)
             .Select(version => new { Version = version, Parsed = NuGetPackageVersion.TryParse(version) })
-            .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, includePreRelease))
+            .Where(version => VersionMatchesFilter(version.Parsed, minimumMajor, maximumMajor, includePreRelease))
             .GroupBy(version => version.Version, StringComparer.OrdinalIgnoreCase)
             .Select(group => group.First())
             .OrderByDescending(version => version.Parsed)
@@ -289,10 +301,37 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         return versions.ToArray();
     }
 
-    private static bool VersionMatchesFilter(NuGetPackageVersion? version, int? minimumMajor, bool includePreRelease) =>
+    private static bool VersionMatchesFilter(
+        NuGetPackageVersion? version,
+        int? minimumMajor,
+        int? maximumMajor,
+        bool includePreRelease
+    ) =>
         version is not null
         && (includePreRelease || version.Prerelease is null)
-        && (minimumMajor is null || version.Release[0] >= minimumMajor.Value);
+        && (minimumMajor is null || version.Release[0] >= minimumMajor.Value)
+        && (maximumMajor is null || version.Release[0] <= maximumMajor.Value);
+
+    private static void ThrowIfInvalidMaximumMajor(int? minimumMajor, int? maximumMajor)
+    {
+        if (maximumMajor < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMajor),
+                maximumMajor,
+                "Maximum major must be non-negative."
+            );
+        }
+
+        if (maximumMajor < minimumMajor)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maximumMajor),
+                maximumMajor,
+                "Maximum major must be greater than or equal to minimum major."
+            );
+        }
+    }
 
     private static void ThrowIfNegative(int? minimumMajor)
     {
@@ -352,16 +391,26 @@ public sealed class NuGetPackageMetadataService : INuGetPackageMetadataService
         public NuGetPackageVersionsLookup GetNuGetPackageVersions(
             string packageName,
             int? minimumMajor = null,
+            int? maximumMajor = null,
             bool includePreRelease = false,
             int? maxItems = null
         )
         {
-            return NuGetPackageVersionsLookup.NotFound(GetVersionsNotFoundDetail(packageName, minimumMajor));
+            return NuGetPackageVersionsLookup.NotFound(
+                GetVersionsNotFoundDetail(packageName, minimumMajor, maximumMajor)
+            );
         }
     }
 
-    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor)
+    private static string GetVersionsNotFoundDetail(string packageName, int? minimumMajor, int? maximumMajor = null)
     {
+        if (maximumMajor is not null)
+        {
+            return minimumMajor is null
+                ? $"Package '{packageName}' versions with major version <= {maximumMajor.Value} were not found."
+                : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} and <= {maximumMajor.Value} were not found.";
+        }
+
         return minimumMajor is null
             ? $"Package '{packageName}' versions were not found."
             : $"Package '{packageName}' versions with major version >= {minimumMajor.Value} were not found.";
