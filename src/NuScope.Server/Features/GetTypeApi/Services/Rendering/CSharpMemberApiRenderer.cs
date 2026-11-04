@@ -150,9 +150,9 @@ internal sealed class CSharpMemberApiRenderer(
             if (!isInterface)
             {
                 builder.Append(GetMethodVisibility(representative!.Value.Attributes));
-                AppendMethodModifiers(builder, representative.Value.Attributes, false);
             }
 
+            AppendMethodModifiers(builder, representative!.Value.Attributes, isInterface);
             builder.Append(signature.ReturnType).Append(' ');
             if (signature.ParameterCount == 0)
             {
@@ -221,9 +221,9 @@ internal sealed class CSharpMemberApiRenderer(
             if (!isInterface)
             {
                 builder.Append(GetMethodVisibility(representative.Value.Attributes));
-                AppendMethodModifiers(builder, representative.Value.Attributes, false);
             }
 
+            AppendMethodModifiers(builder, representative.Value.Attributes, isInterface);
             builder
                 .Append("event ")
                 .Append(
