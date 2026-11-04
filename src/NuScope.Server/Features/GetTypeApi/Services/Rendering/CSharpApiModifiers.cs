@@ -117,7 +117,9 @@ internal static class CSharpApiModifiers
             else if (
                 !isStatic
                 && !isAbstract
-                && (attributes & MethodAttributes.MemberAccessMask) == MethodAttributes.Public
+                && (attributes & MethodAttributes.MemberAccessMask)
+                    is not MethodAttributes.Private
+                        and not MethodAttributes.PrivateScope
             )
             {
                 builder.Append("sealed ");

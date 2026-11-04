@@ -81,4 +81,22 @@ public interface IInterfaceModifierApiFixture
     private void PrivateMethod() { }
 
     private static void PrivateStaticMethod() { }
+
+    protected sealed void ProtectedSealedMethod() { }
+
+    internal sealed void InternalSealedMethod() { }
+
+    protected internal sealed void ProtectedInternalSealedMethod() { }
+
+    private protected sealed void PrivateProtectedSealedMethod() { }
+
+    protected sealed int ProtectedSealedProperty => 0;
+
+    internal sealed int this[short index] => 0;
+
+    internal sealed event EventHandler InternalSealedEvent
+    {
+        add { }
+        remove { }
+    }
 }

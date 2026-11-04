@@ -54,6 +54,21 @@ public sealed class InterfaceModifierTypeApiReaderTests
         Assert.DoesNotContain("PrivateStaticMethod", api, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("sealed void ProtectedSealedMethod();")]
+    [InlineData("sealed void InternalSealedMethod();")]
+    [InlineData("sealed void ProtectedInternalSealedMethod();")]
+    [InlineData("sealed void PrivateProtectedSealedMethod();")]
+    [InlineData("sealed int ProtectedSealedProperty { get; }")]
+    [InlineData("sealed int this[short arg0] { get; }")]
+    [InlineData("sealed event EventHandler InternalSealedEvent;")]
+    public void RendersNonPublicSealedInterfaceMembers(string declaration)
+    {
+        var api = ReadApi(includePrivate: true).ReplaceLineEndings("\n");
+
+        Assert.Contains("\n    " + declaration + "\n", api, StringComparison.Ordinal);
+    }
+
     private static string ReadApi(bool includePrivate)
     {
         using var stream = File.OpenRead(typeof(IInterfaceModifierApiFixture).Assembly.Location);
