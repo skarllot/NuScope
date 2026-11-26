@@ -8,11 +8,17 @@
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />
     <PackageVersion Include="coverlet.msbuild" Version="10.1.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.6.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.14"
-                    Condition="'$(MSBuildProjectName)' != 'NuScope.AppHost'" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Hosting"
+      Version="10.0.14"
+      Condition="'$(MSBuildProjectName)' != 'NuScope.AppHost'"
+    />
     <!-- Aspire 17 requires Hosting 10.0.15; the other projects retain their locked version. -->
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.15"
-                    Condition="'$(MSBuildProjectName)' == 'NuScope.AppHost'" />
+    <PackageVersion
+      Include="Microsoft.Extensions.Hosting"
+      Version="10.0.15"
+      Condition="'$(MSBuildProjectName)' == 'NuScope.AppHost'"
+    />
     <PackageVersion Include="MessagePack" Version="3.1.12" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageVersion Include="ModelContextProtocol" Version="2.3.1" />
